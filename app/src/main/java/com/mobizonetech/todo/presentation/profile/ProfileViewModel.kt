@@ -3,6 +3,7 @@ package com.mobizonetech.todo.presentation.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobizonetech.todo.domain.usecases.task.GetTasksUseCase
+import com.mobizonetech.todo.util.ThemeManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +13,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getTasksUseCase: GetTasksUseCase
+    private val getTasksUseCase: GetTasksUseCase,
+    private val themeManager: ThemeManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -20,6 +22,7 @@ class ProfileViewModel @Inject constructor(
 
     init {
         loadUserData()
+        loadThemeState()
     }
 
     private fun loadUserData() {
@@ -44,6 +47,16 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    private fun loadThemeState() {
+        viewModelScope.launch {
+            themeManager.isDarkMode.collect { isDarkMode ->
+                _uiState.value = _uiState.value.copy(
+                    darkModeEnabled = isDarkMode
+                )
+            }
+        }
+    }
+
     fun toggleNotifications() {
         _uiState.value = _uiState.value.copy(
             notificationsEnabled = !_uiState.value.notificationsEnabled
@@ -51,9 +64,13 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun toggleDarkMode() {
-        _uiState.value = _uiState.value.copy(
-            darkModeEnabled = !_uiState.value.darkModeEnabled
-        )
+        viewModelScope.launch {
+            val newDarkMode = !_uiState.value.darkModeEnabled
+            themeManager.setDarkMode(newDarkMode)
+            _uiState.value = _uiState.value.copy(
+                darkModeEnabled = newDarkMode
+            )
+        }
     }
 }
 

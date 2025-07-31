@@ -1,5 +1,6 @@
 package com.mobizonetech.todo.di
 
+import com.mobizonetech.todo.data.api.interceptors.ApiLoggingInterceptor
 import com.mobizonetech.todo.data.api.interceptors.MockInterceptor
 import dagger.Module
 import dagger.Provides
@@ -20,8 +21,9 @@ object NetworkModule {
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(MockInterceptor()) // Mock API responses for development
+            .addInterceptor(ApiLoggingInterceptor()) // Custom API logging
             .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                level = HttpLoggingInterceptor.Level.BASIC // Reduced logging since we have custom interceptor
             })
             .build()
     }

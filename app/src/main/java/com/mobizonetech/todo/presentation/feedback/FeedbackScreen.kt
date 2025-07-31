@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobizonetech.todo.domain.models.FeedbackCategory
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,11 +32,6 @@ fun FeedbackScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Feedback") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -75,7 +71,7 @@ fun FeedbackScreen(
                         onClick = { rating = index + 1 }
                     ) {
                         Icon(
-                            imageVector = if (index < rating) Icons.Default.Star else Icons.Default.Star,
+                            imageVector = if (index < rating) Icons.Default.Star else Icons.Outlined.Star,
                             contentDescription = "Star ${index + 1}",
                             tint = if (index < rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(32.dp)
@@ -187,6 +183,14 @@ fun FeedbackScreen(
                         )
                     }
                 }
+            }
+        }
+        
+        // Clear success state after 3 seconds
+        LaunchedEffect(uiState.isSuccess) {
+            if (uiState.isSuccess) {
+                delay(3000)
+                viewModel.clearSuccess()
             }
         }
     }

@@ -26,4 +26,7 @@ interface TaskDao {
 
     @Query("UPDATE tasks SET completed = :completed WHERE id = :taskId")
     suspend fun updateTaskCompletion(taskId: String, completed: Boolean)
+
+    @Query("SELECT * FROM tasks WHERE title LIKE :query OR description LIKE :query")
+    suspend fun searchTasks(query: String): List<TaskEntity>
 } 

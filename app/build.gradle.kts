@@ -67,6 +67,19 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+
+    // Security
+    implementation(libs.androidx.security.crypto)
+
+    // Animations
+    implementation(libs.lottie.compose)
+
     // JVM tests - Hilt
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
@@ -76,6 +89,12 @@ dependencies {
     kspAndroidTest(libs.hilt.compiler)
 
     implementation(libs.androidx.lifecycle.viewModelCompose)
+
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Coil Image Loading
+    implementation(libs.coil.compose)
 
     // Retrofit & Networking
     implementation(libs.retrofit)

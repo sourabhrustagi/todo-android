@@ -15,11 +15,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.mobizonetech.todo.presentation.common.RandomLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLogin: (LoginMethod, String, String?) -> Unit = { _, _, _ -> },
+    onLoginSuccess: () -> Unit = {},
     isLoading: Boolean = false,
     error: String? = null
 ) {
@@ -41,6 +42,13 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Random Logo at the top
+        RandomLogo(
+            modifier = Modifier.padding(bottom = 32.dp),
+            size = 100,
+            showAppName = false
+        )
+        
         Text("Sign In", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(24.dp))
         TabRow(selectedTabIndex = selectedTab.ordinal) {
@@ -107,7 +115,8 @@ fun LoginScreen(
                                 otpError = "Enter a valid OTP"
                                 return@Button
                             }
-                            onLogin(LoginMethod.PHONE, phone, otp)
+                            // Simulate successful login
+                            onLoginSuccess()
                         }
                     },
                     enabled = !isLoading,
@@ -165,7 +174,8 @@ fun LoginScreen(
                             passwordError = "Password must be at least 6 characters"
                             return@Button
                         }
-                        onLogin(LoginMethod.EMAIL, email, password)
+                        // Simulate successful login
+                        onLoginSuccess()
                     },
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
@@ -198,7 +208,7 @@ fun PreviewLoginScreenPhone() {
 fun PreviewLoginScreenEmail() {
     var selectedTab by remember { mutableStateOf(LoginMethod.EMAIL) }
     LoginScreen(
-        onLogin = { _, _, _ -> },
+        onLoginSuccess = {},
         isLoading = false,
         error = null
     )

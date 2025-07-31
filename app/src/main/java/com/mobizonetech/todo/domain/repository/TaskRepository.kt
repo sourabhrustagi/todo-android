@@ -55,4 +55,6 @@ interface TaskRepository {
         categoryId: String? = null,
         priority: TaskPriority? = null
     ): Result<Map<String, Any>>
+
+    suspend fun syncTasksFromServer(): Result<Unit>
 } 

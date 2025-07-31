@@ -27,8 +27,11 @@ class FeedbackViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null, isSuccess = false)
             
+            println("Submitting feedback: rating=$rating, comment=$comment, category=$category")
+            
             submitFeedbackUseCase(rating, comment, category).fold(
                 onSuccess = { feedback ->
+                    println("Feedback submitted successfully: $feedback")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isSuccess = true,
@@ -36,6 +39,7 @@ class FeedbackViewModel @Inject constructor(
                     )
                 },
                 onFailure = { exception ->
+                    println("Feedback submission failed: ${exception.message}")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = exception.message ?: "Failed to submit feedback",

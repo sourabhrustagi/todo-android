@@ -5,25 +5,35 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mobizonetech.todo.domain.models.TaskPriority
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
-    onTaskAdded: (title: String, description: String?) -> Unit
+    onTaskAdded: (title: String, description: String?, priority: TaskPriority) -> Unit,
+    isLoading: Boolean = false
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    var selectedPriority by remember { mutableStateOf(TaskPriority.MEDIUM) }
     var isTitleError by remember { mutableStateOf(false) }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!isLoading) onDismiss() },
         title = { Text("Add New Task") },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                if (isLoading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                
                 OutlinedTextField(
                     value = title,
                     onValueChange = { 
@@ -35,7 +45,8 @@ fun AddTaskDialog(
                     supportingText = if (isTitleError) {
                         { Text("Title is required") }
                     } else null,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 )
                 
                 OutlinedTextField(
@@ -44,8 +55,31 @@ fun AddTaskDialog(
                     label = { Text("Description (Optional)") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
-                    maxLines = 5
+                    maxLines = 5,
+                    enabled = !isLoading
                 )
+                
+                // Priority Selection
+                Text(
+                    text = "Priority",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TaskPriority.values().forEach { priority ->
+                        FilterChip(
+                            selected = selectedPriority == priority,
+                            onClick = { if (!isLoading) selectedPriority = priority },
+                            label = { Text(priority.getDisplayName()) },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isLoading
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
@@ -55,14 +89,27 @@ fun AddTaskDialog(
                         isTitleError = true
                         return@TextButton
                     }
-                    onTaskAdded(title.trim(), description.trim().takeIf { it.isNotBlank() })
-                }
+                    if (!isLoading) {
+                        onTaskAdded(title.trim(), description.trim().takeIf { it.isNotBlank() }, selectedPriority)
+                    }
+                },
+                enabled = !isLoading
             ) {
-                Text("Add Task")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(if (isLoading) "Adding..." else "Add Task")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isLoading
+            ) {
                 Text("Cancel")
             }
         }
@@ -74,6 +121,6 @@ fun AddTaskDialog(
 fun AddTaskDialogPreview() {
     AddTaskDialog(
         onDismiss = {},
-        onTaskAdded = { _, _ -> }
+        onTaskAdded = { _, _, _ -> }
     )
 } 

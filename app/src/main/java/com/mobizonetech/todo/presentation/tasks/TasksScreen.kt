@@ -5,22 +5,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.mobizonetech.todo.presentation.common.LoadingSpinner
-import com.mobizonetech.todo.presentation.common.ErrorView
-import com.mobizonetech.todo.presentation.common.EmptyState
+import com.mobizonetech.todo.presentation.common.*
 import com.mobizonetech.todo.presentation.tasks.components.TaskItem
 import com.mobizonetech.todo.presentation.tasks.components.AddTaskDialog
 import com.mobizonetech.todo.presentation.tasks.components.SearchBar
 import com.mobizonetech.todo.presentation.tasks.components.TaskFilter
 import com.mobizonetech.todo.presentation.tasks.components.TaskFilterOption
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,6 +25,9 @@ fun TasksScreen(
     modifier: Modifier = Modifier,
     onNavigateToProfile: () -> Unit = {},
     onNavigateToFeedback: () -> Unit = {},
+    onNavigateToAddTask: () -> Unit = {},
+    onNavigateToTaskDetail: (String) -> Unit = {},
+    onLogout: () -> Unit = {},
     viewModel: TasksViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -36,20 +36,23 @@ fun TasksScreen(
     var taskToDelete by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(TaskFilterOption.ALL) }
+    
+    val snackbarHostState = remember { SnackbarHostState() }
+    val fabTooltipState = rememberFabTooltipState()
+    
+    // Handle snackbar messages
+    LaunchedEffect(uiState.snackbarMessage) {
+        uiState.snackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearSnackbar()
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Todo App") },
-                actions = {
-                    IconButton(onClick = onNavigateToFeedback) {
-                        Icon(Icons.Default.Info, contentDescription = "Feedback")
-                    }
-                    IconButton(onClick = onNavigateToProfile) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
-                    }
-                },
+                title = { Text("My Tasks") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -57,11 +60,15 @@ fun TasksScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showAddTaskDialog = true }
+                onClick = { 
+                    showAddTaskDialog = true
+                    fabTooltipState.hide()
+                }
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task")
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -70,10 +77,28 @@ fun TasksScreen(
         ) {
             when {
                 uiState.isLoading -> {
-                    LoadingSpinner(
-                        message = "Loading tasks...",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    // Shimmer Loading State
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        // Shimmer Search and Filter Section
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            ShimmerSearchBar()
+                            ShimmerFilterChips()
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Shimmer Task List
+                        ShimmerTaskList(
+                            itemCount = 6,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
                 uiState.error != null -> {
                     val error = uiState.error
@@ -103,12 +128,18 @@ fun TasksScreen(
                         ) {
                             SearchBar(
                                 query = searchQuery,
-                                onQueryChange = { searchQuery = it }
+                                onQueryChange = { 
+                                    searchQuery = it
+                                    viewModel.updateSearchQuery(it)
+                                }
                             )
                             
                             TaskFilter(
                                 selectedFilter = selectedFilter,
-                                onFilterChange = { selectedFilter = it }
+                                onFilterChange = { 
+                                    selectedFilter = it
+                                    viewModel.updateFilter(it)
+                                }
                             )
                         }
                         
@@ -120,61 +151,73 @@ fun TasksScreen(
                             items(uiState.tasks) { task ->
                                 TaskItem(
                                     task = task,
-                                    onTaskClick = { viewModel.toggleTaskCompletion(task.id) },
+                                    onTaskClick = { 
+                                        viewModel.toggleTaskCompletion(task.id)
+                                        onNavigateToTaskDetail(task.id)
+                                    },
                                     onDeleteClick = { 
                                         taskToDelete = task.id
                                         showDeleteConfirmation = true
-                                    }
+                                    },
+                                    isLoading = uiState.isUpdatingTask
                                 )
                             }
                         }
                     }
                 }
             }
-        }
 
-        if (showAddTaskDialog) {
-            AddTaskDialog(
-                onDismiss = { showAddTaskDialog = false },
-                onTaskAdded = { title, description ->
-                    viewModel.createTask(title, description)
-                    showAddTaskDialog = false
-                }
-            )
-        }
+            // Add Task Dialog
+            if (showAddTaskDialog) {
+                AddTaskDialog(
+                    onDismiss = { showAddTaskDialog = false },
+                    onTaskAdded = { title, description, priority ->
+                        viewModel.createTask(title, description, priority)
+                        showAddTaskDialog = false
+                    },
+                    isLoading = uiState.isCreatingTask
+                )
+            }
 
-        // Delete Confirmation Dialog
-        if (showDeleteConfirmation) {
-            AlertDialog(
-                onDismissRequest = { 
-                    showDeleteConfirmation = false
-                    taskToDelete = null
-                },
-                title = { Text("Delete Task") },
-                text = { Text("Are you sure you want to delete this task? This action cannot be undone.") },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            taskToDelete?.let { taskId ->
-                                viewModel.deleteTask(taskId)
+            // Delete Confirmation Dialog
+            if (showDeleteConfirmation) {
+                AlertDialog(
+                    onDismissRequest = { 
+                        showDeleteConfirmation = false
+                        taskToDelete = null
+                    },
+                    title = { Text("Delete Task") },
+                    text = { Text("Are you sure you want to delete this task? This action cannot be undone.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                taskToDelete?.let { taskId ->
+                                    viewModel.deleteTask(taskId)
+                                }
+                                showDeleteConfirmation = false
+                                taskToDelete = null
                             }
-                            showDeleteConfirmation = false
-                            taskToDelete = null
+                        ) {
+                            Text("Delete")
                         }
-                    ) {
-                        Text("Delete")
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { 
-                            showDeleteConfirmation = false
-                            taskToDelete = null
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { 
+                                showDeleteConfirmation = false
+                                taskToDelete = null
+                            }
+                        ) {
+                            Text("Cancel")
                         }
-                    ) {
-                        Text("Cancel")
                     }
-                }
+                )
+            }
+            
+            // FAB Tooltip
+            FabTooltip(
+                visible = fabTooltipState.visible.value,
+                onDismiss = { fabTooltipState.hide() }
             )
         }
     }

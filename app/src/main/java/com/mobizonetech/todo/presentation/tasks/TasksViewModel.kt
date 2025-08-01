@@ -8,7 +8,6 @@ import com.mobizonetech.todo.domain.usecases.task.CompleteTaskUseCase
 import com.mobizonetech.todo.domain.usecases.task.CreateTaskUseCase
 import com.mobizonetech.todo.domain.usecases.task.DeleteTaskUseCase
 import com.mobizonetech.todo.domain.usecases.task.GetTasksUseCase
-import com.mobizonetech.todo.presentation.tasks.components.TaskFilterOption
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +28,6 @@ class TasksViewModel @Inject constructor(
     
     private val _allTasks = MutableStateFlow<List<Task>>(emptyList())
     private val _searchQuery = MutableStateFlow("")
-    private val _selectedFilter = MutableStateFlow(TaskFilterOption.ALL)
 
     fun loadTasks() {
         viewModelScope.launch {
@@ -40,7 +38,7 @@ class TasksViewModel @Inject constructor(
                     onSuccess = { tasks ->
                         _allTasks.value = tasks
                         _uiState.value = _uiState.value.copy(
-                            tasks = filterAndSearchTasks(tasks, _searchQuery.value, _selectedFilter.value),
+                            tasks = filterAndSearchTasks(tasks, _searchQuery.value),
                             isLoading = false,
                             error = null
                         )
@@ -137,14 +135,7 @@ class TasksViewModel @Inject constructor(
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
         _uiState.value = _uiState.value.copy(
-            tasks = filterAndSearchTasks(_allTasks.value, query, _selectedFilter.value)
-        )
-    }
-    
-    fun updateFilter(filter: TaskFilterOption) {
-        _selectedFilter.value = filter
-        _uiState.value = _uiState.value.copy(
-            tasks = filterAndSearchTasks(_allTasks.value, _searchQuery.value, filter)
+            tasks = filterAndSearchTasks(_allTasks.value, query)
         )
     }
     
@@ -158,8 +149,7 @@ class TasksViewModel @Inject constructor(
     
     private fun filterAndSearchTasks(
         tasks: List<Task>,
-        searchQuery: String,
-        filter: TaskFilterOption
+        searchQuery: String
     ): List<Task> {
         var filteredTasks = tasks
         
@@ -169,16 +159,6 @@ class TasksViewModel @Inject constructor(
                 task.title.contains(searchQuery, ignoreCase = true) ||
                 (task.description?.contains(searchQuery, ignoreCase = true) == true)
             }
-        }
-        
-        // Apply filter
-        filteredTasks = when (filter) {
-            TaskFilterOption.ALL -> filteredTasks
-            TaskFilterOption.COMPLETED -> filteredTasks.filter { it.completed }
-            TaskFilterOption.PENDING -> filteredTasks.filter { !it.completed }
-            TaskFilterOption.HIGH_PRIORITY -> filteredTasks.filter { it.priority == TaskPriority.HIGH }
-            TaskFilterOption.MEDIUM_PRIORITY -> filteredTasks.filter { it.priority == TaskPriority.MEDIUM }
-            TaskFilterOption.LOW_PRIORITY -> filteredTasks.filter { it.priority == TaskPriority.LOW }
         }
         
         return filteredTasks

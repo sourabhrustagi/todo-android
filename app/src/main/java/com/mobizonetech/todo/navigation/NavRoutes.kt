@@ -6,6 +6,7 @@ sealed class NavRoutes(val route: String) {
     object Tasks : NavRoutes("tasks")
     object Profile : NavRoutes("profile")
     object Feedback : NavRoutes("feedback")
+    object Settings : NavRoutes("settings")
     object TaskDetail : NavRoutes("task/{taskId}") {
         fun createRoute(taskId: String) = "task/$taskId"
     }

@@ -14,6 +14,7 @@ import com.mobizonetech.todo.navigation.NavRoutes
 import com.mobizonetech.todo.presentation.common.BottomNavigation
 import com.mobizonetech.todo.presentation.feedback.FeedbackScreen
 import com.mobizonetech.todo.presentation.profile.ProfileScreen
+import com.mobizonetech.todo.presentation.settings.SettingsScreen
 import com.mobizonetech.todo.presentation.tasks.TasksScreen
 import com.mobizonetech.todo.presentation.tasks.TaskDetailScreen
 
@@ -59,12 +60,23 @@ fun MainScreen(
                     onNavigateToFeedback = {
                         navController.navigate(NavRoutes.Feedback.route)
                     },
+                    onNavigateToSettings = {
+                        navController.navigate(NavRoutes.Settings.route)
+                    },
                     onLogout = onLogout
                 )
             }
             
             composable(NavRoutes.Feedback.route) {
                 FeedbackScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+            
+            composable(NavRoutes.Settings.route) {
+                SettingsScreen(
                     onBackClick = {
                         navController.popBackStack()
                     }

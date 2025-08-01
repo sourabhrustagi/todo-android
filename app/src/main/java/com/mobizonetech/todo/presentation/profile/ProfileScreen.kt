@@ -24,6 +24,7 @@ import com.mobizonetech.todo.presentation.profile.ProfileViewModel
 fun ProfileScreen(
     onBackClick: () -> Unit = {},
     onNavigateToFeedback: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     onLogout: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
@@ -205,60 +206,18 @@ fun ProfileScreen(
                         
                         Divider()
                         
-                        // Notifications
+                        // Settings
                         ListItem(
-                            headlineContent = { Text("Notifications") },
-                            supportingContent = { Text("Manage notification preferences") },
+                            headlineContent = { Text("Settings") },
+                            supportingContent = { Text("Theme, notifications, and app preferences") },
                             leadingContent = {
-                                if (uiState.notificationsEnabled) {
-                                    Icon(
-                                        imageVector = Icons.Default.Notifications,
-                                        contentDescription = stringResource(R.string.notifications_enabled),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Notifications,
-                                        contentDescription = stringResource(R.string.notifications_disabled),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            },
-                            trailingContent = {
-                                Switch(
-                                    checked = uiState.notificationsEnabled,
-                                    onCheckedChange = { viewModel.toggleNotifications() }
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
-                            }
-                        )
-                        
-                        Divider()
-                        
-                        // Dark Mode
-                        ListItem(
-                            headlineContent = { Text("Dark Mode") },
-                            supportingContent = { Text("Toggle dark/light theme") },
-                            leadingContent = {
-                                if (uiState.darkModeEnabled) {
-                                    Icon(
-                                        imageVector = Icons.Default.Notifications,
-                                        contentDescription = stringResource(R.string.dark_mode_enabled),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Notifications,
-                                        contentDescription = stringResource(R.string.light_mode_enabled),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
                             },
-                            trailingContent = {
-                                Switch(
-                                    checked = uiState.darkModeEnabled,
-                                    onCheckedChange = { viewModel.toggleDarkMode() }
-                                )
-                            }
+                            modifier = Modifier.clickable { onNavigateToSettings() }
                         )
                     }
                 }

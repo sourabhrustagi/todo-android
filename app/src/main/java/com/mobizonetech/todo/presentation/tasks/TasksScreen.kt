@@ -6,9 +6,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 
 import androidx.compose.material3.*
@@ -76,68 +76,35 @@ fun TasksScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }
                         ) {
-                            DropdownMenuItem(
-                                text = { Text("Refresh Tasks") },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Refresh,
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    viewModel.loadTasks()
-                                    showMenu = false
-                                }
-                            )
+                            TaskPriority.values().forEach { priority ->
+                                DropdownMenuItem(
+                                    text = { Text("Show ${priority.getDisplayName()} Priority") },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = when (priority) {
+                                                TaskPriority.HIGH -> Icons.Default.Warning
+                                                TaskPriority.MEDIUM -> Icons.Default.Notifications
+                                                TaskPriority.LOW -> Icons.Default.KeyboardArrowDown
+                                            },
+                                            contentDescription = null,
+                                            tint = when (priority) {
+                                                TaskPriority.HIGH -> HighPriorityColor
+                                                TaskPriority.MEDIUM -> MediumPriorityColor
+                                                TaskPriority.LOW -> LowPriorityColor
+                                            }
+                                        )
+                                    },
+                                    onClick = {
+                                        // TODO: Implement priority filtering
+                                        showMenu = false
+                                    }
+                                )
+                            }
                             
                             HorizontalDivider()
                             
                             DropdownMenuItem(
-                                text = { Text("Sort by Priority") },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.KeyboardArrowDown,
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    // TODO: Implement sorting
-                                    showMenu = false
-                                }
-                            )
-                            
-                            DropdownMenuItem(
-                                text = { Text("Sort by Date") },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.KeyboardArrowDown,
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    // TODO: Implement sorting
-                                    showMenu = false
-                                }
-                            )
-                            
-                            HorizontalDivider()
-                            
-                            DropdownMenuItem(
-                                text = { Text("Settings") },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Settings,
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    // TODO: Navigate to settings
-                                    showMenu = false
-                                }
-                            )
-                            
-                            DropdownMenuItem(
-                                text = { Text("View All Tasks") },
+                                text = { Text("Show All Tasks") },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Default.List,

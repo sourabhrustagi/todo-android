@@ -5,6 +5,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -55,7 +60,98 @@ fun TasksScreen(
                 title = { Text("My Tasks") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                ),
+                actions = {
+                    var showMenu by remember { mutableStateOf(false) }
+                    
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More options"
+                            )
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Refresh Tasks") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.loadTasks()
+                                    showMenu = false
+                                }
+                            )
+                            
+                            HorizontalDivider()
+                            
+                            DropdownMenuItem(
+                                text = { Text("Sort by Priority") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    // TODO: Implement sorting
+                                    showMenu = false
+                                }
+                            )
+                            
+                            DropdownMenuItem(
+                                text = { Text("Sort by Date") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    // TODO: Implement sorting
+                                    showMenu = false
+                                }
+                            )
+                            
+                            HorizontalDivider()
+                            
+                            DropdownMenuItem(
+                                text = { Text("Settings") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    // TODO: Navigate to settings
+                                    showMenu = false
+                                }
+                            )
+                            
+                            DropdownMenuItem(
+                                text = { Text("View All Tasks") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.List,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    // TODO: Show all tasks (already showing)
+                                    showMenu = false
+                                }
+                            )
+                        }
+                    }
+                }
             )
         },
         floatingActionButton = {

@@ -15,15 +15,23 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobizonetech.todo.presentation.common.RandomLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit = {},
-    isLoading: Boolean = false,
-    error: String? = null
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Handle authentication success
+    LaunchedEffect(uiState.isAuthenticated) {
+        if (uiState.isAuthenticated) {
+            onLoginSuccess()
+        }
+    }
     var selectedTab by remember { mutableStateOf(LoginMethod.PHONE) }
     var phone by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
@@ -83,7 +91,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                if (otpRequested) {
+                if (uiState.otpRequested) {
                     OutlinedTextField(
                         value = otp,
                         onValueChange = {
@@ -108,25 +116,24 @@ fun LoginScreen(
                             phoneError = "Enter a valid phone number (e.g. +1234567890)"
                             return@Button
                         }
-                        if (!otpRequested) {
-                            otpRequested = true
+                        if (!uiState.otpRequested) {
+                            viewModel.login(phone)
                         } else {
                             if (otp.length < 4) {
                                 otpError = "Enter a valid OTP"
                                 return@Button
                             }
-                            // Simulate successful login
-                            onLoginSuccess()
+                            viewModel.verifyOtp(phone, otp)
                         }
                     },
-                    enabled = !isLoading,
+                    enabled = !uiState.isLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (isLoading) {
+                    if (uiState.isLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Text(if (!otpRequested) "Request OTP" else "Login")
+                    Text(if (!uiState.otpRequested) "Request OTP" else "Login")
                 }
             }
             LoginMethod.EMAIL -> {
@@ -174,13 +181,13 @@ fun LoginScreen(
                             passwordError = "Password must be at least 6 characters"
                             return@Button
                         }
-                        // Simulate successful login
+                        // For now, simulate successful login for email
                         onLoginSuccess()
                     },
-                    enabled = !isLoading,
+                    enabled = !uiState.isLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (isLoading) {
+                    if (uiState.isLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(8.dp))
                     }
@@ -188,9 +195,14 @@ fun LoginScreen(
                 }
             }
         }
-        if (error != null) {
+        uiState.error?.let { error ->
             Spacer(modifier = Modifier.height(16.dp))
             Text(error, color = MaterialTheme.colorScheme.error)
+        }
+        
+        uiState.message?.let { message ->
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(message, color = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -208,8 +220,6 @@ fun PreviewLoginScreenPhone() {
 fun PreviewLoginScreenEmail() {
     var selectedTab by remember { mutableStateOf(LoginMethod.EMAIL) }
     LoginScreen(
-        onLoginSuccess = {},
-        isLoading = false,
-        error = null
+        onLoginSuccess = {}
     )
 } 

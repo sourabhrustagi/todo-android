@@ -10,12 +10,16 @@ import com.mobizonetech.todo.presentation.auth.LoginScreen
 import com.mobizonetech.todo.presentation.main.MainScreen
 import com.mobizonetech.todo.presentation.tasks.AddTaskScreen
 import com.mobizonetech.todo.presentation.tasks.TaskDetailScreen
+import com.mobizonetech.todo.presentation.auth.AuthStateManager
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun TodoNavGraph(
     navController: NavHostController,
     startDestination: String = NavRoutes.Login.route
 ) {
+    val authStateManager: AuthStateManager = hiltViewModel()
+    
     NavHost(
         navController = navController,
         startDestination = startDestination

@@ -140,7 +140,8 @@ fun TasksScreen(
                 .padding(
                     start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                     end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = paddingValues.calculateBottomPadding()
+                    bottom = paddingValues.calculateBottomPadding(),
+                    top = paddingValues.calculateTopPadding()
                 )
         ) {
             when {

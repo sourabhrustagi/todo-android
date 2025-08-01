@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -13,6 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,6 +66,15 @@ fun TaskItem(
             modifier = modifier
                 .fillMaxWidth()
                 .clickable { onTaskClick() }
+                .shadow(
+                    elevation = if (task.priority == TaskPriority.HIGH) 8.dp else 4.dp,
+                    shape = RoundedCornerShape(16.dp),
+                    ambientColor = when (task.priority) {
+                        TaskPriority.HIGH -> HighPriorityColor.copy(alpha = 0.3f)
+                        TaskPriority.MEDIUM -> MediumPriorityColor.copy(alpha = 0.3f)
+                        TaskPriority.LOW -> LowPriorityColor.copy(alpha = 0.3f)
+                    }
+                )
                 .animateContentSize(
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -74,62 +86,70 @@ fun TaskItem(
                 contentColor = MaterialTheme.colorScheme.onSurface
             ),
             elevation = CardDefaults.cardElevation(
-                defaultElevation = if (task.priority == TaskPriority.HIGH) 4.dp else 2.dp
+                defaultElevation = 0.dp
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(16.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Priority indicator
+                // Enhanced Priority indicator with gradient
                 Box(
                     modifier = Modifier
-                        .size(6.dp, 40.dp)
-                        .clip(RoundedCornerShape(3.dp))
+                        .size(8.dp, 48.dp)
+                        .clip(RoundedCornerShape(4.dp))
                         .background(
                             when (task.priority) {
-                                TaskPriority.HIGH -> HighPriorityColor
-                                TaskPriority.MEDIUM -> MediumPriorityColor
-                                TaskPriority.LOW -> LowPriorityColor
+                                TaskPriority.HIGH -> Brush.verticalGradient(
+                                    colors = listOf(HighPriorityColor, HighPriorityColor.copy(alpha = 0.7f))
+                                )
+                                TaskPriority.MEDIUM -> Brush.verticalGradient(
+                                    colors = listOf(MediumPriorityColor, MediumPriorityColor.copy(alpha = 0.7f))
+                                )
+                                TaskPriority.LOW -> Brush.verticalGradient(
+                                    colors = listOf(LowPriorityColor, LowPriorityColor.copy(alpha = 0.7f))
+                                )
                             }
                         )
                 )
                 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 
-                // Checkbox or Loading indicator
+                // Enhanced Checkbox or Loading indicator
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(28.dp),
+                        strokeWidth = 3.dp,
                         color = MaterialTheme.colorScheme.primary
                     )
                 } else {
                     Checkbox(
                         checked = task.completed,
                         onCheckedChange = { onCheckboxClick() },
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(28.dp),
                         colors = CheckboxDefaults.colors(
                             checkedColor = MaterialTheme.colorScheme.primary,
-                            uncheckedColor = MaterialTheme.colorScheme.outline
+                            uncheckedColor = MaterialTheme.colorScheme.outline,
+                            checkmarkColor = MaterialTheme.colorScheme.surface
                         )
                     )
                 }
                 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 
-                // Task content
+                // Enhanced Task content
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = task.title,
                         style = MaterialTheme.typography.titleMedium.copy(
-                            textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None
+                            fontWeight = if (task.completed) androidx.compose.ui.text.font.FontWeight.Normal else androidx.compose.ui.text.font.FontWeight.Medium
                         ),
+                        textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None,
                         color = if (task.completed) 
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         else 
@@ -139,14 +159,14 @@ fun TaskItem(
                     )
                     
                     if (!task.description.isNullOrBlank()) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = task.description,
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None
                             ),
                             color = if (task.completed) 
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                             else 
                                 MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 2,
@@ -154,64 +174,96 @@ fun TaskItem(
                         )
                     }
                     
-                    // Task metadata
+                    // Enhanced Task metadata
                     Row(
-                        modifier = Modifier.padding(top = 8.dp),
+                        modifier = Modifier.padding(top = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Priority chip
+                        // Enhanced Priority chip
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(16.dp),
                             color = when (task.priority) {
                                 TaskPriority.HIGH -> HighPriorityColor.copy(alpha = 0.1f)
                                 TaskPriority.MEDIUM -> MediumPriorityColor.copy(alpha = 0.1f)
                                 TaskPriority.LOW -> LowPriorityColor.copy(alpha = 0.1f)
-                            }
-                        ) {
-                            Text(
-                                text = task.priority.getDisplayName(),
-                                style = MaterialTheme.typography.labelSmall,
+                            },
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = 1.dp,
                                 color = when (task.priority) {
-                                    TaskPriority.HIGH -> HighPriorityColor
-                                    TaskPriority.MEDIUM -> MediumPriorityColor
-                                    TaskPriority.LOW -> LowPriorityColor
-                                },
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    TaskPriority.HIGH -> HighPriorityColor.copy(alpha = 0.3f)
+                                    TaskPriority.MEDIUM -> MediumPriorityColor.copy(alpha = 0.3f)
+                                    TaskPriority.LOW -> LowPriorityColor.copy(alpha = 0.3f)
+                                }
                             )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = when (task.priority) {
+                                        TaskPriority.HIGH -> Icons.Default.Warning
+                                        TaskPriority.MEDIUM -> Icons.Default.Notifications
+                                        TaskPriority.LOW -> Icons.Default.KeyboardArrowDown
+                                    },
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = when (task.priority) {
+                                        TaskPriority.HIGH -> HighPriorityColor
+                                        TaskPriority.MEDIUM -> MediumPriorityColor
+                                        TaskPriority.LOW -> LowPriorityColor
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = task.priority.getDisplayName(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = when (task.priority) {
+                                        TaskPriority.HIGH -> HighPriorityColor
+                                        TaskPriority.MEDIUM -> MediumPriorityColor
+                                        TaskPriority.LOW -> LowPriorityColor
+                                    }
+                                )
+                            }
                         }
                         
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         
-                        // Due date if available
+                        // Enhanced Due date if available
                         task.dueDate?.let { dueDate ->
-                            Icon(
-                                imageVector = Icons.Default.DateRange,
-                                contentDescription = "Due date",
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = dueDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Due date",
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = dueDate.format(DateTimeFormatter.ofPattern("MMM dd")),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
                 
-                // Delete button
-                if (!isLoading) {
-                    IconButton(
-                        onClick = onDeleteClick,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete task",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                // Enhanced Delete button
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete task",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }

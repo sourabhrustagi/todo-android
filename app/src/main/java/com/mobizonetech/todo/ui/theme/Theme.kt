@@ -21,6 +21,7 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = Pink80,
     background = DarkBackground,
     surface = DarkSurface,
+    surfaceVariant = DarkSurfaceVariant,
     onBackground = DarkOnSurface,
     onSurface = DarkOnSurface,
     onSurfaceVariant = DarkOnSurfaceVariant
@@ -32,6 +33,7 @@ private val LightColorScheme = lightColorScheme(
     tertiary = Pink40,
     background = LightBackground,
     surface = LightSurface,
+    surfaceVariant = LightSurfaceVariant,
     onBackground = LightOnSurface,
     onSurface = LightOnSurface,
     onSurfaceVariant = LightOnSurfaceVariant
@@ -57,7 +59,8 @@ fun TodoTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            // Use surface color for status bar for better integration
+            window.statusBarColor = colorScheme.surface.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

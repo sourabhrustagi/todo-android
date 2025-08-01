@@ -5,14 +5,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.mobizonetech.todo.navigation.NavRoutes
 import com.mobizonetech.todo.presentation.common.BottomNavigation
 import com.mobizonetech.todo.presentation.feedback.FeedbackScreen
 import com.mobizonetech.todo.presentation.profile.ProfileScreen
 import com.mobizonetech.todo.presentation.tasks.TasksScreen
+import com.mobizonetech.todo.presentation.tasks.TaskDetailScreen
 
 @Composable
 fun MainScreen(
@@ -64,6 +67,23 @@ fun MainScreen(
                 FeedbackScreen(
                     onBackClick = {
                         navController.popBackStack()
+                    }
+                )
+            }
+            
+            // Task Detail Screen
+            composable(
+                route = NavRoutes.TaskDetail.route,
+                arguments = listOf(
+                    navArgument("taskId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+                TaskDetailScreen(
+                    taskId = taskId,
+                    onBackClick = { navController.popBackStack() },
+                    onEditTask = { taskId ->
+                        navController.navigate(NavRoutes.EditTask.createRoute(taskId))
                     }
                 )
             }

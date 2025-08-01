@@ -99,6 +99,8 @@ dependencies {
     // Retrofit & Networking
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
+    implementation(libs.moshi)
+    ksp(libs.moshi.ksp)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
 

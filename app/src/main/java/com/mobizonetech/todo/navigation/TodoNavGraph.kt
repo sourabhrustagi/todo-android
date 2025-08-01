@@ -9,7 +9,6 @@ import androidx.navigation.navArgument
 import com.mobizonetech.todo.presentation.auth.LoginScreen
 import com.mobizonetech.todo.presentation.main.MainScreen
 import com.mobizonetech.todo.presentation.tasks.AddTaskScreen
-import com.mobizonetech.todo.presentation.tasks.TaskDetailScreen
 import com.mobizonetech.todo.presentation.auth.AuthStateManager
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -51,23 +50,6 @@ fun TodoNavGraph(
             AddTaskScreen(
                 onBackClick = { navController.popBackStack() },
                 onTaskAdded = { navController.popBackStack() }
-            )
-        }
-        
-        // Task Detail Screen
-        composable(
-            route = NavRoutes.TaskDetail.route,
-            arguments = listOf(
-                navArgument("taskId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-            TaskDetailScreen(
-                taskId = taskId,
-                onBackClick = { navController.popBackStack() },
-                onEditTask = { taskId ->
-                    navController.navigate(NavRoutes.EditTask.createRoute(taskId))
-                }
             )
         }
         

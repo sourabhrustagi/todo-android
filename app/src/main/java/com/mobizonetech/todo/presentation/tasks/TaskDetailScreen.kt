@@ -357,7 +357,7 @@ fun TaskDetailScreen(
                         onClick = {
                             task?.let { viewModel.deleteTask(it.id) }
                             showDeleteConfirmation = false
-                            onBackClick() // Navigate back after deletion
+                            // Let LaunchedEffect handle navigation after successful deletion
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error

@@ -301,8 +301,17 @@ fun TasksScreen(
         }
     }
 
+    // Load tasks when screen is first displayed
     LaunchedEffect(Unit) {
         viewModel.loadTasks()
+    }
+    
+    // Refresh tasks when returning from other screens (e.g., after deletion from detail screen)
+    LaunchedEffect(uiState.snackbarMessage) {
+        if (uiState.snackbarMessage?.contains("deleted successfully") == true) {
+            // Refresh tasks to ensure the list is up to date
+            viewModel.loadTasks()
+        }
     }
 }
 

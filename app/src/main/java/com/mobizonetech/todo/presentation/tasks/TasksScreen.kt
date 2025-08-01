@@ -177,12 +177,24 @@ fun TasksScreen(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-                uiState.tasks.isEmpty() -> {
+                uiState.allTasks.isEmpty() -> {
                     EmptyState(
                         title = "No tasks yet",
                         message = "Tap the + button to add your first task",
                         actionText = "Add Task",
                         onAction = { showAddTaskDialog = true },
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                uiState.tasks.isEmpty() && uiState.searchQuery.isNotBlank() -> {
+                    EmptyState(
+                        title = "No results found",
+                        message = "No tasks match your search: \"${uiState.searchQuery}\"",
+                        actionText = "Clear Search",
+                        onAction = { 
+                            searchQuery = ""
+                            viewModel.updateSearchQuery("")
+                        },
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }

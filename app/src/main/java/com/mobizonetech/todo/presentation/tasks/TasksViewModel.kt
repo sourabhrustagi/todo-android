@@ -26,8 +26,7 @@ class TasksViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(TasksUiState())
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
     
-    private val _allTasks = MutableStateFlow<List<Task>>(emptyList())
-    private val _searchQuery = MutableStateFlow("")
+
 
     fun loadTasks() {
         viewModelScope.launch {
@@ -36,9 +35,9 @@ class TasksViewModel @Inject constructor(
             getTasksUseCase().collect { result ->
                 result.fold(
                     onSuccess = { tasks ->
-                        _allTasks.value = tasks
                         _uiState.value = _uiState.value.copy(
-                            tasks = filterAndSearchTasks(tasks, _searchQuery.value),
+                            allTasks = tasks,
+                            tasks = filterAndSearchTasks(tasks, _uiState.value.searchQuery),
                             isLoading = false,
                             error = null
                         )
@@ -133,9 +132,9 @@ class TasksViewModel @Inject constructor(
     }
     
     fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
         _uiState.value = _uiState.value.copy(
-            tasks = filterAndSearchTasks(_allTasks.value, query)
+            searchQuery = query,
+            tasks = filterAndSearchTasks(_uiState.value.allTasks, query)
         )
     }
     
@@ -167,6 +166,8 @@ class TasksViewModel @Inject constructor(
 
 data class TasksUiState(
     val tasks: List<Task> = emptyList(),
+    val allTasks: List<Task> = emptyList(),
+    val searchQuery: String = "",
     val isLoading: Boolean = false,
     val isCreatingTask: Boolean = false,
     val isUpdatingTask: Boolean = false,

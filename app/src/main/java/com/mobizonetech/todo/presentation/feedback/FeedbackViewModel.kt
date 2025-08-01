@@ -37,6 +37,7 @@ class FeedbackViewModel @Inject constructor(
                         isSuccess = true,
                         error = null
                     )
+                    println("UI State updated - isSuccess: ${_uiState.value.isSuccess}")
                 },
                 onFailure = { exception ->
                     println("Feedback submission failed: ${exception.message}")
@@ -45,6 +46,7 @@ class FeedbackViewModel @Inject constructor(
                         error = exception.message ?: "Failed to submit feedback",
                         isSuccess = false
                     )
+                    println("UI State updated - error: ${_uiState.value.error}")
                 }
             )
         }

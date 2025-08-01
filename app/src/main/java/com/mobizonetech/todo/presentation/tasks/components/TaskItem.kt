@@ -62,6 +62,7 @@ fun TaskItem(
         Card(
             modifier = modifier
                 .fillMaxWidth()
+                .clickable { onTaskClick() }
                 .animateContentSize(
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -122,9 +123,7 @@ fun TaskItem(
                 
                 // Task content
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onTaskClick() }
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = task.title,

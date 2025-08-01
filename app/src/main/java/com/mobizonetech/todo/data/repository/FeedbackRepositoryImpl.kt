@@ -48,7 +48,7 @@ class FeedbackRepositoryImpl @Inject constructor(
                     id = response.data.id,
                     rating = response.data.rating,
                     comment = response.data.comment,
-                    category = FeedbackCategory.valueOf(response.data.category),
+                    category = FeedbackCategory.valueOf(response.data.category.uppercase()),
                     createdAt = LocalDateTime.now()
                 )
 
@@ -127,7 +127,7 @@ class FeedbackRepositoryImpl @Inject constructor(
             id = id,
             rating = rating,
             comment = comment,
-            category = FeedbackCategory.valueOf(category),
+            category = FeedbackCategory.valueOf(category.uppercase()),
             createdAt = createdAt
         )
     }

@@ -54,6 +54,13 @@ class AuthRepositoryImpl @Inject constructor(
         ApiLogger.logApiCall(apiName, requestData)
 
         return try {
+            // Check for correct OTP (123456)
+            if (otp != "123456") {
+                val error = Exception("Wrong OTP entered. Please enter the correct OTP.")
+                ApiLogger.logApiError(apiName, error)
+                return Result.failure(error)
+            }
+
             // Simulate API delay
             delay(2000)
 

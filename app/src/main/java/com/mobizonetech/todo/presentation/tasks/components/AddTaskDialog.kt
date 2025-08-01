@@ -12,7 +12,8 @@ import com.mobizonetech.todo.domain.models.TaskPriority
 fun AddTaskDialog(
     onDismiss: () -> Unit,
     onTaskAdded: (title: String, description: String?, priority: TaskPriority) -> Unit,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    error: String? = null
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -78,6 +79,30 @@ fun AddTaskDialog(
                             modifier = Modifier.weight(1f),
                             enabled = !isLoading
                         )
+                    }
+                }
+                
+                // Error Display
+                if (error != null) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Text(
+                                text = "Error",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Text(
+                                text = error,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
                     }
                 }
             }

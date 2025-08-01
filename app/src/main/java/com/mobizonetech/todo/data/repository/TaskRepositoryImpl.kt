@@ -205,13 +205,15 @@ class TaskRepositoryImpl @Inject constructor(
             delay(2000)
             val existingTask = taskDao.getTaskById(taskId)
             if (existingTask != null) {
+                // Toggle the completion status
                 val updatedTask = existingTask.copy(
-                    completed = true,
+                    completed = !existingTask.completed,
                     updatedAt = LocalDateTime.now()
                 )
                 taskDao.updateTask(updatedTask)
                 val result = updatedTask.toDomain()
-                ApiLogger.logApiSuccess(apiName, "Task completed: ${result.title}")
+                val action = if (updatedTask.completed) "completed" else "uncompleted"
+                ApiLogger.logApiSuccess(apiName, "Task $action: ${result.title}")
                 Result.success(result)
             } else {
                 val error = Exception("Task not found")

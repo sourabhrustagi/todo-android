@@ -40,17 +40,6 @@ class DataSeeder @Inject constructor(
                 ),
                 TaskEntity(
                     id = UUID.randomUUID().toString(),
-                    title = "Setup Project Structure",
-                    description = "Create basic project structure with MVVM architecture and proper package organization.",
-                    priority = TaskPriority.MEDIUM.name,
-                    categoryId = null,
-                    dueDate = LocalDateTime.of(2024, 1, 10, 12, 0),
-                    completed = true,
-                    createdAt = LocalDateTime.now().minusDays(5),
-                    updatedAt = LocalDateTime.now().minusDays(1)
-                ),
-                TaskEntity(
-                    id = UUID.randomUUID().toString(),
                     title = "Implement Navigation",
                     description = "Set up proper navigation between screens using Jetpack Navigation Compose.",
                     priority = TaskPriority.HIGH.name,
@@ -73,44 +62,11 @@ class DataSeeder @Inject constructor(
                 ),
                 TaskEntity(
                     id = UUID.randomUUID().toString(),
-                    title = "Test App Functionality",
-                    description = "Write comprehensive tests for all features and ensure everything works as expected.",
-                    priority = TaskPriority.LOW.name,
-                    categoryId = null,
-                    dueDate = LocalDateTime.of(2024, 1, 16, 12, 0),
-                    completed = false,
-                    createdAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now()
-                ),
-                TaskEntity(
-                    id = UUID.randomUUID().toString(),
-                    title = "Optimize Performance",
-                    description = "Review and optimize app performance, memory usage, and battery consumption.",
-                    priority = TaskPriority.MEDIUM.name,
-                    categoryId = null,
-                    dueDate = LocalDateTime.of(2024, 1, 18, 12, 0),
-                    completed = false,
-                    createdAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now()
-                ),
-                TaskEntity(
-                    id = UUID.randomUUID().toString(),
                     title = "Prepare for Release",
                     description = "Finalize app for production release including app store assets and documentation.",
                     priority = TaskPriority.HIGH.name,
                     categoryId = null,
                     dueDate = LocalDateTime.of(2024, 1, 20, 12, 0),
-                    completed = false,
-                    createdAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now()
-                ),
-                TaskEntity(
-                    id = UUID.randomUUID().toString(),
-                    title = "Review Code Quality",
-                    description = "Perform code review and refactor any problematic areas for better maintainability.",
-                    priority = TaskPriority.LOW.name,
-                    categoryId = null,
-                    dueDate = LocalDateTime.of(2024, 1, 22, 12, 0),
                     completed = false,
                     createdAt = LocalDateTime.now(),
                     updatedAt = LocalDateTime.now()

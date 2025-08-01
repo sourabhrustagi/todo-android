@@ -12,15 +12,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mobizonetech.todo.navigation.NavRoutes
 import com.mobizonetech.todo.presentation.common.BottomNavigation
-import com.mobizonetech.todo.presentation.feedback.FeedbackScreen
 import com.mobizonetech.todo.presentation.profile.ProfileScreen
-import com.mobizonetech.todo.presentation.settings.SettingsScreen
 import com.mobizonetech.todo.presentation.tasks.TasksScreen
-import com.mobizonetech.todo.presentation.tasks.TaskDetailScreen
 
 @Composable
 fun MainScreen(
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    parentNavController: NavController? = null
 ) {
     val navController = rememberNavController()
     
@@ -39,14 +37,13 @@ fun MainScreen(
                     onNavigateToProfile = {
                         navController.navigate(NavRoutes.Profile.route)
                     },
-                    onNavigateToFeedback = {
-                        navController.navigate(NavRoutes.Feedback.route)
-                    },
                     onNavigateToAddTask = {
                         navController.navigate(NavRoutes.AddTask.route)
                     },
                     onNavigateToTaskDetail = { taskId ->
-                        navController.navigate(NavRoutes.TaskDetail.createRoute(taskId))
+                        parentNavController?.navigate(NavRoutes.TaskDetail.createRoute(taskId)) {
+                            launchSingleTop = true
+                        }
                     },
                     onLogout = onLogout
                 )
@@ -57,48 +54,18 @@ fun MainScreen(
                     onBackClick = {
                         navController.popBackStack()
                     },
-                    onNavigateToFeedback = {
-                        navController.navigate(NavRoutes.Feedback.route)
-                    },
                     onNavigateToSettings = {
-                        navController.navigate(NavRoutes.Settings.route)
+                        parentNavController?.navigate(NavRoutes.Settings.route) {
+                            launchSingleTop = true
+                        }
                     },
                     onLogout = onLogout
                 )
             }
             
-            composable(NavRoutes.Feedback.route) {
-                FeedbackScreen(
-                    onBackClick = {
-                        navController.popBackStack()
-                    }
-                )
-            }
+
             
-            composable(NavRoutes.Settings.route) {
-                SettingsScreen(
-                    onBackClick = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            
-            // Task Detail Screen
-            composable(
-                route = NavRoutes.TaskDetail.route,
-                arguments = listOf(
-                    navArgument("taskId") { type = NavType.StringType }
-                )
-            ) { backStackEntry ->
-                val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-                TaskDetailScreen(
-                    taskId = taskId,
-                    onBackClick = { navController.popBackStack() },
-                    onEditTask = { taskId ->
-                        navController.navigate(NavRoutes.EditTask.createRoute(taskId))
-                    }
-                )
-            }
+
         }
     }
 } 

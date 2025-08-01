@@ -37,20 +37,6 @@ fun BottomNavigation(
         )
         
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Notifications, contentDescription = stringResource(R.string.feedback)) },
-            label = { Text(stringResource(R.string.feedback)) },
-            selected = currentRoute == NavRoutes.Feedback.route,
-            onClick = {
-                if (currentRoute != NavRoutes.Feedback.route) {
-                    navController.navigate(NavRoutes.Feedback.route) {
-                        popUpTo(navController.graph.startDestinationId)
-                        launchSingleTop = true
-                    }
-                }
-            }
-        )
-        
-        NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = stringResource(R.string.profile)) },
             label = { Text(stringResource(R.string.profile)) },
             selected = currentRoute == NavRoutes.Profile.route,

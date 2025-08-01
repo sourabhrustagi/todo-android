@@ -5,6 +5,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,12 +25,12 @@ import com.mobizonetech.todo.presentation.profile.ProfileViewModel
 @Composable
 fun ProfileScreen(
     onBackClick: () -> Unit = {},
-    onNavigateToFeedback: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onLogout: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showLogoutConfirmation by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -190,21 +192,7 @@ fun ProfileScreen(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // Feedback Option
-                        ListItem(
-                            headlineContent = { Text("Send Feedback") },
-                            supportingContent = { Text("Help us improve the app") },
-                            leadingContent = {
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "Feedback",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            modifier = Modifier.clickable { onNavigateToFeedback() }
-                        )
-                        
-                        Divider()
+
                         
                         // Settings
                         ListItem(
@@ -219,11 +207,102 @@ fun ProfileScreen(
                             },
                             modifier = Modifier.clickable { onNavigateToSettings() }
                         )
+                        
+                        Divider()
+                        
+                        // Logout
+                        ListItem(
+                            headlineContent = { Text("Logout") },
+                            supportingContent = { Text("Sign out of your account") },
+                            leadingContent = {
+                                Icon(
+                                    imageVector = Icons.Default.ExitToApp,
+                                    contentDescription = "Logout",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            },
+                            modifier = Modifier.clickable { showLogoutConfirmation = true }
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
+        
+        // Logout Confirmation Bottom Sheet
+        if (showLogoutConfirmation) {
+            ModalBottomSheet(
+                onDismissRequest = { showLogoutConfirmation = false },
+                containerColor = MaterialTheme.colorScheme.surface,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Warning Icon
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Warning",
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Title
+                    Text(
+                        text = "Logout",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Description
+                    Text(
+                        text = "Are you sure you want to logout? You'll need to log in again to access your tasks.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // Buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Cancel Button
+                        OutlinedButton(
+                            onClick = { showLogoutConfirmation = false },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Cancel")
+                        }
+                        
+                        // Logout Button
+                        Button(
+                            onClick = {
+                                showLogoutConfirmation = false
+                                onLogout()
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("Logout")
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
         }
     }
 }

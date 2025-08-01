@@ -63,13 +63,26 @@ class TasksViewModel @Inject constructor(
                     loadTasks()
                     _uiState.value = _uiState.value.copy(
                         isCreatingTask = false,
-                        snackbarMessage = "Task created successfully"
+                        snackbarMessage = "Task created successfully",
+                        error = null // Clear any previous errors
                     )
                 },
                 onFailure = { exception ->
+                    val errorMessage = when {
+                        exception.message?.contains("network", ignoreCase = true) == true -> 
+                            "Network error. Please check your connection and try again."
+                        exception.message?.contains("timeout", ignoreCase = true) == true -> 
+                            "Request timed out. Please try again."
+                        exception.message?.contains("server", ignoreCase = true) == true -> 
+                            "Server error. Please try again later."
+                        exception.message?.contains("unauthorized", ignoreCase = true) == true -> 
+                            "Authentication error. Please log in again."
+                        else -> exception.message ?: "Failed to create task. Please try again."
+                    }
+                    
                     _uiState.value = _uiState.value.copy(
                         isCreatingTask = false,
-                        error = exception.message ?: "Failed to create task"
+                        error = errorMessage
                     )
                 }
             )
@@ -77,14 +90,35 @@ class TasksViewModel @Inject constructor(
     }
 
     fun toggleTaskCompletion(taskId: String) {
+        // Prevent multiple rapid clicks
+        if (_uiState.value.isUpdatingTask) {
+            return
+        }
+        
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isUpdatingTask = true)
             
             completeTaskUseCase(taskId).fold(
-                onSuccess = { task ->
-                    // Reload tasks to show the updated task
-                    loadTasks()
+                onSuccess = { updatedTask ->
+                    // Update only the specific task in the UI state
+                    val currentAllTasks = _uiState.value.allTasks.toMutableList()
+                    val currentFilteredTasks = _uiState.value.tasks.toMutableList()
+                    
+                    // Find and update the task in allTasks
+                    val allTasksIndex = currentAllTasks.indexOfFirst { it.id == taskId }
+                    if (allTasksIndex != -1) {
+                        currentAllTasks[allTasksIndex] = updatedTask
+                    }
+                    
+                    // Find and update the task in filtered tasks
+                    val filteredTasksIndex = currentFilteredTasks.indexOfFirst { it.id == taskId }
+                    if (filteredTasksIndex != -1) {
+                        currentFilteredTasks[filteredTasksIndex] = updatedTask
+                    }
+                    
                     _uiState.value = _uiState.value.copy(
+                        allTasks = currentAllTasks,
+                        tasks = currentFilteredTasks,
                         isUpdatingTask = false,
                         snackbarMessage = "Task updated successfully"
                     )
@@ -108,9 +142,19 @@ class TasksViewModel @Inject constructor(
             try {
                 deleteTaskUseCase(taskId).fold(
                     onSuccess = {
-                        // Reload tasks to show the updated list
-                        loadTasks()
+                        // Remove only the specific task from the UI state
+                        val currentAllTasks = _uiState.value.allTasks.toMutableList()
+                        val currentFilteredTasks = _uiState.value.tasks.toMutableList()
+                        
+                        // Remove the task from allTasks
+                        currentAllTasks.removeAll { it.id == taskId }
+                        
+                        // Remove the task from filtered tasks
+                        currentFilteredTasks.removeAll { it.id == taskId }
+                        
                         _uiState.value = _uiState.value.copy(
+                            allTasks = currentAllTasks,
+                            tasks = currentFilteredTasks,
                             isDeletingTask = false,
                             snackbarMessage = "Task deleted successfully"
                         )

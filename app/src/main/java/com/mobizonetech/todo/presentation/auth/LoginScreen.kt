@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -85,7 +86,7 @@ fun LoginScreen(
                     isError = phoneError != null,
                     supportingText = phoneError?.let { { Text(it) } },
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone,
+                        keyboardType = KeyboardType.Text,
                         imeAction = if (otpRequested) ImeAction.Next else ImeAction.Done
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -112,8 +113,8 @@ fun LoginScreen(
                 }
                 Button(
                     onClick = {
-                        if (!phone.matches(Regex("^\\+[1-9]\\d{1,14}$"))) {
-                            phoneError = "Enter a valid phone number (e.g. +1234567890)"
+                        if (phone.isBlank()) {
+                            phoneError = "Enter a phone number"
                             return@Button
                         }
                         if (!uiState.otpRequested) {
@@ -197,7 +198,28 @@ fun LoginScreen(
         }
         uiState.error?.let { error ->
             Spacer(modifier = Modifier.height(16.dp))
-            Text(error, color = MaterialTheme.colorScheme.error)
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Error",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
         
         uiState.message?.let { message ->

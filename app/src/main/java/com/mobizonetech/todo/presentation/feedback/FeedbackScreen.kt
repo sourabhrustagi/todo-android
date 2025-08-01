@@ -3,9 +3,12 @@ package com.mobizonetech.todo.presentation.feedback
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material3.SnackbarDuration
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,16 +30,26 @@ fun FeedbackScreen(
     var rating by remember { mutableStateOf(0) }
     var comment by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(FeedbackCategory.GENERAL) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Feedback") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -94,6 +107,7 @@ fun FeedbackScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable { selectedCategory = category }
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -144,21 +158,41 @@ fun FeedbackScreen(
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
+                    Text("Submitting...")
+                } else {
+                    Text("Submit Feedback")
                 }
-                Text("Submit Feedback")
             }
             
             val error = uiState.error
             if (error != null) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = error,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center
-                )
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Error",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
             
             if (uiState.isSuccess) {
@@ -173,24 +207,35 @@ fun FeedbackScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Thank you!",
-                            style = MaterialTheme.typography.titleMedium
+                            text = "Success!",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Your feedback has been submitted successfully.",
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                             textAlign = TextAlign.Center
                         )
                     }
                 }
             }
+            
+
         }
         
-        // Clear success state after 3 seconds
+        // Handle success state with snackbar and navigation
         LaunchedEffect(uiState.isSuccess) {
+            println("LaunchedEffect triggered - isSuccess: ${uiState.isSuccess}")
             if (uiState.isSuccess) {
-                delay(3000)
-                viewModel.clearSuccess()
+                println("Showing success snackbar")
+                snackbarHostState.showSnackbar(
+                    message = "Feedback submitted successfully! Thank you for your input.",
+                    duration = SnackbarDuration.Short
+                )
+                delay(2000) // Wait for snackbar to be visible
+                println("Navigating back after success")
+                onBackClick() // Navigate back to previous screen
             }
         }
     }

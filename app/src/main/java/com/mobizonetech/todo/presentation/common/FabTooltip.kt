@@ -41,9 +41,10 @@ fun FabTooltip(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.BottomEnd
             ) {
+                // Position tooltip to align with FAB
                 Column(
                     modifier = Modifier
-                        .padding(end = 80.dp, bottom = 80.dp)
+                        .padding(end = 88.dp, bottom = 88.dp) // Aligns with FAB position
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(12.dp),
@@ -58,10 +59,10 @@ fun FabTooltip(
                     
                     Spacer(modifier = Modifier.height(4.dp))
                     
-                    // Arrow pointing to FAB
+                    // Small arrow pointing to FAB
                     Box(
                         modifier = Modifier
-                            .size(0.dp)
+                            .size(8.dp, 4.dp)
                             .background(
                                 color = MaterialTheme.colorScheme.surfaceVariant,
                                 shape = RoundedCornerShape(2.dp)

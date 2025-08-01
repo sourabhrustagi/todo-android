@@ -184,19 +184,31 @@ class TasksViewModelTest {
     }
 
     @Test
-    fun `toggleTaskCompletion should reload tasks`() = runTest {
+    fun `toggleTaskCompletion should update specific task`() = runTest {
         // Given
-        val tasks = listOf(
+        val initialTasks = listOf(
             Task(
                 id = "task_1",
                 title = "Test Task",
-                completed = true,
+                completed = false,
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now()
             )
         )
+        val updatedTask = Task(
+            id = "task_1",
+            title = "Test Task",
+            completed = true,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
+        )
 
-        coEvery { getTasksUseCase() } returns flowOf(Result.success(tasks))
+        coEvery { getTasksUseCase() } returns flowOf(Result.success(initialTasks))
+        coEvery { completeTaskUseCase("task_1") } returns Result.success(updatedTask)
+
+        // Set up initial state
+        viewModel.loadTasks()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         // When
         viewModel.toggleTaskCompletion("task_1")
@@ -204,7 +216,9 @@ class TasksViewModelTest {
 
         // Then
         val finalState = viewModel.uiState.value
-        assertEquals(tasks, finalState.tasks)
+        assertEquals(1, finalState.tasks.size)
+        assertTrue(finalState.tasks.first().completed)
+        assertFalse(finalState.isUpdatingTask)
     }
 
     @Test

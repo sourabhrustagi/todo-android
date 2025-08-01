@@ -31,7 +31,6 @@ import kotlinx.coroutines.launch
 fun TasksScreen(
     modifier: Modifier = Modifier,
     onNavigateToProfile: () -> Unit = {},
-    onNavigateToFeedback: () -> Unit = {},
     onNavigateToAddTask: () -> Unit = {},
     onNavigateToTaskDetail: (String) -> Unit = {},
     onLogout: () -> Unit = {},
@@ -44,13 +43,19 @@ fun TasksScreen(
     var searchQuery by remember { mutableStateOf("") }
     
     val snackbarHostState = remember { SnackbarHostState() }
-    val fabTooltipState = rememberFabTooltipState()
     
     // Handle snackbar messages
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
             viewModel.clearSnackbar()
+        }
+    }
+    
+    // Handle successful task creation
+    LaunchedEffect(uiState.snackbarMessage) {
+        if (uiState.snackbarMessage?.contains("created successfully") == true) {
+            showAddTaskDialog = false
         }
     }
 
@@ -126,7 +131,6 @@ fun TasksScreen(
             FloatingActionButton(
                 onClick = { 
                     showAddTaskDialog = true
-                    fabTooltipState.hide()
                 }
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task")
@@ -245,12 +249,16 @@ fun TasksScreen(
             // Add Task Dialog
             if (showAddTaskDialog) {
                 AddTaskDialog(
-                    onDismiss = { showAddTaskDialog = false },
+                    onDismiss = { 
+                        showAddTaskDialog = false
+                        viewModel.clearError() // Clear error when dialog is dismissed
+                    },
                     onTaskAdded = { title, description, priority ->
                         viewModel.createTask(title, description, priority)
-                        showAddTaskDialog = false
+                        // Don't close dialog immediately, let success/error handle it
                     },
-                    isLoading = uiState.isCreatingTask
+                    isLoading = uiState.isCreatingTask,
+                    error = uiState.error
                 )
             }
 
@@ -289,11 +297,7 @@ fun TasksScreen(
                 )
             }
             
-            // FAB Tooltip
-            FabTooltip(
-                visible = fabTooltipState.visible.value,
-                onDismiss = { fabTooltipState.hide() }
-            )
+
         }
     }
 

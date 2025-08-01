@@ -1,26 +1,27 @@
 package com.mobizonetech.todo.presentation.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mobizonetech.todo.util.ThemeManager
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onNavigateToFeedback: () -> Unit = {},
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    var isDarkMode by remember { mutableStateOf(false) }
-    var notificationsEnabled by remember { mutableStateOf(true) }
+    val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
 
     Scaffold(
         topBar = {
@@ -87,7 +88,9 @@ fun SettingsScreen(
                         
                         Switch(
                             checked = isDarkMode,
-                            onCheckedChange = { isDarkMode = it },
+                            onCheckedChange = { newValue ->
+                                viewModel.toggleTheme(newValue)
+                            },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = MaterialTheme.colorScheme.primary,
                                 checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
@@ -97,18 +100,23 @@ fun SettingsScreen(
                 }
             }
             
-            // Notification Settings
+
+            
+            // Feedback
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             ) {
+                Box(
+                    modifier = Modifier.clickable { onNavigateToFeedback() }
+                ) {
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Notifications",
+                        text = "Support & Feedback",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -124,26 +132,32 @@ fun SettingsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notifications icon",
-                                tint = if (notificationsEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Feedback",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = if (notificationsEnabled) "Enabled" else "Disabled",
+                                text = "Send Feedback",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
                         
-                        Switch(
-                            checked = notificationsEnabled,
-                            onCheckedChange = { notificationsEnabled = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = MaterialTheme.colorScheme.primary,
-                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
-                            )
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Navigate",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Help us improve the app by sharing your thoughts",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 }
             }
             

@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.mobizonetech.todo.domain.models.Task
 import com.mobizonetech.todo.domain.models.TaskPriority
 import com.mobizonetech.todo.presentation.common.FadeInAnimation
@@ -32,11 +33,25 @@ fun TaskDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val task = uiState.tasks.find { it.id == taskId }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     
-    LaunchedEffect(taskId) {
-        // Load task details if not already loaded
-        if (task == null) {
+    // Always refresh tasks when the screen is displayed
+    LaunchedEffect(Unit) {
+        viewModel.loadTasks()
+    }
+    
+    // Refresh task data when completion state changes
+    LaunchedEffect(uiState.isUpdatingTask) {
+        if (!uiState.isUpdatingTask) {
+            // Reload tasks to get updated completion state
             viewModel.loadTasks()
+        }
+    }
+    
+    // Navigate back after successful deletion
+    LaunchedEffect(uiState.snackbarMessage) {
+        if (uiState.snackbarMessage?.contains("deleted successfully") == true) {
+            onBackClick()
         }
     }
     
@@ -49,13 +64,7 @@ fun TaskDetailScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                actions = {
-                    IconButton(
-                        onClick = { task?.let { onEditTask(it.id) } }
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
-                    }
-                },
+
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -124,13 +133,27 @@ fun TaskDetailScreen(
                                             MaterialTheme.colorScheme.onSurface
                                     )
                                     
-                                    Checkbox(
-                                        checked = task.completed,
-                                        onCheckedChange = { viewModel.toggleTaskCompletion(task.id) },
-                                        colors = CheckboxDefaults.colors(
-                                            checkedColor = MaterialTheme.colorScheme.primary
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        if (uiState.isUpdatingTask) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                        
+                                        Checkbox(
+                                            checked = task.completed,
+                                            onCheckedChange = { viewModel.toggleTaskCompletion(task.id) },
+                                            enabled = !uiState.isUpdatingTask,
+                                            colors = CheckboxDefaults.colors(
+                                                checkedColor = MaterialTheme.colorScheme.primary
+                                            )
                                         )
-                                    )
+                                    }
                                 }
                                 
                                 if (!task.description.isNullOrBlank()) {
@@ -283,15 +306,26 @@ fun TaskDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             OutlinedButton(
-                                onClick = { viewModel.deleteTask(task.id) },
+                                onClick = { showDeleteConfirmation = true },
                                 modifier = Modifier.weight(1f),
+                                enabled = !uiState.isDeletingTask,
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = MaterialTheme.colorScheme.error
                                 )
                             ) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete")
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Delete")
+                                if (uiState.isDeletingTask) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Deleting...")
+                                } else {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Delete")
+                                }
                             }
                             
                             Button(
@@ -306,6 +340,40 @@ fun TaskDetailScreen(
                     }
                 }
             }
+        }
+        
+        // Delete Confirmation Dialog
+        if (showDeleteConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmation = false },
+                title = {
+                    Text("Delete Task")
+                },
+                text = {
+                    Text("Are you sure you want to delete this task? This action cannot be undone.")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            task?.let { viewModel.deleteTask(it.id) }
+                            showDeleteConfirmation = false
+                            onBackClick() // Navigate back after deletion
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { showDeleteConfirmation = false }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 } 

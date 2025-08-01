@@ -56,22 +56,6 @@ fun NavigationDrawer(
                 )
                 
                 NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Notifications, contentDescription = null) },
-                    label = { Text(stringResource(R.string.feedback)) },
-                    selected = false,
-                    onClick = {
-                        scope.launch {
-                            drawerState.close()
-                            navController.navigate(NavRoutes.Feedback.route) {
-                                popUpTo(navController.graph.startDestinationId)
-                                launchSingleTop = true
-                            }
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-                
-                NavigationDrawerItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = null) },
                     label = { Text(stringResource(R.string.profile)) },
                     selected = false,

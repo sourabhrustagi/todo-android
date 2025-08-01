@@ -84,8 +84,8 @@ fun TaskItem(
                 // Priority indicator
                 Box(
                     modifier = Modifier
-                        .size(4.dp, 40.dp)
-                        .clip(RoundedCornerShape(2.dp))
+                        .size(6.dp, 40.dp)
+                        .clip(RoundedCornerShape(3.dp))
                         .background(
                             when (task.priority) {
                                 TaskPriority.HIGH -> HighPriorityColor
@@ -166,7 +166,7 @@ fun TaskItem(
                             }
                         ) {
                             Text(
-                                text = task.priority.name.lowercase().capitalize(),
+                                text = task.priority.getDisplayName(),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = when (task.priority) {
                                     TaskPriority.HIGH -> HighPriorityColor

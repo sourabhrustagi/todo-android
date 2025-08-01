@@ -5,6 +5,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +23,8 @@ import com.mobizonetech.todo.presentation.tasks.components.AddTaskDialog
 import com.mobizonetech.todo.presentation.tasks.components.SearchBar
 import com.mobizonetech.todo.presentation.tasks.components.TaskFilter
 import com.mobizonetech.todo.presentation.tasks.components.TaskFilterOption
+import com.mobizonetech.todo.domain.models.TaskPriority
+import com.mobizonetech.todo.ui.theme.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +63,84 @@ fun TasksScreen(
                 title = { Text("My Tasks") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                ),
+                actions = {
+                    var showMenu by remember { mutableStateOf(false) }
+                    
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More options"
+                            )
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Filter by Priority") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = { showMenu = false }
+                            )
+                            
+                            HorizontalDivider()
+                            
+                            TaskPriority.values().forEach { priority ->
+                                DropdownMenuItem(
+                                    text = { Text("Show ${priority.getDisplayName()} Priority") },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = when (priority) {
+                                                TaskPriority.HIGH -> Icons.Default.Warning
+                                                TaskPriority.MEDIUM -> Icons.Default.Notifications
+                                                TaskPriority.LOW -> Icons.Default.KeyboardArrowDown
+                                            },
+                                            contentDescription = null,
+                                            tint = when (priority) {
+                                                TaskPriority.HIGH -> HighPriorityColor
+                                                TaskPriority.MEDIUM -> MediumPriorityColor
+                                                TaskPriority.LOW -> LowPriorityColor
+                                            }
+                                        )
+                                    },
+                                    onClick = {
+                                        viewModel.updateFilter(
+                                            when (priority) {
+                                                TaskPriority.HIGH -> TaskFilterOption.HIGH_PRIORITY
+                                                TaskPriority.MEDIUM -> TaskFilterOption.MEDIUM_PRIORITY
+                                                TaskPriority.LOW -> TaskFilterOption.LOW_PRIORITY
+                                            }
+                                        )
+                                        showMenu = false
+                                    }
+                                )
+                            }
+                            
+                            HorizontalDivider()
+                            
+                            DropdownMenuItem(
+                                text = { Text("Show All Tasks") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.List,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.updateFilter(TaskFilterOption.ALL)
+                                    showMenu = false
+                                }
+                            )
+                        }
+                    }
+                }
             )
         },
         floatingActionButton = {

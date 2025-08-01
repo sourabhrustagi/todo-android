@@ -41,8 +41,8 @@ fun TaskDetailScreen(
     }
     
     // Refresh task data when completion state changes
-    LaunchedEffect(uiState.isUpdatingTask) {
-        if (!uiState.isUpdatingTask) {
+    LaunchedEffect(uiState.updatingTaskId) {
+        if (uiState.updatingTaskId == null) {
             // Reload tasks to get updated completion state
             viewModel.loadTasks()
         }
@@ -137,7 +137,7 @@ fun TaskDetailScreen(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        if (uiState.isUpdatingTask) {
+                                        if (uiState.updatingTaskId == task.id) {
                                             CircularProgressIndicator(
                                                 modifier = Modifier.size(16.dp),
                                                 strokeWidth = 2.dp,
@@ -148,7 +148,7 @@ fun TaskDetailScreen(
                                         Checkbox(
                                             checked = task.completed,
                                             onCheckedChange = { viewModel.toggleTaskCompletion(task.id) },
-                                            enabled = !uiState.isUpdatingTask,
+                                            enabled = uiState.updatingTaskId != task.id,
                                             colors = CheckboxDefaults.colors(
                                                 checkedColor = MaterialTheme.colorScheme.primary
                                             )

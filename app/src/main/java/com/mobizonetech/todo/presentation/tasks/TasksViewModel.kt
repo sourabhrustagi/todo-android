@@ -90,13 +90,13 @@ class TasksViewModel @Inject constructor(
     }
 
     fun toggleTaskCompletion(taskId: String) {
-        // Prevent multiple rapid clicks
-        if (_uiState.value.isUpdatingTask) {
+        // Prevent multiple rapid clicks on the same task
+        if (_uiState.value.updatingTaskId == taskId) {
             return
         }
         
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isUpdatingTask = true)
+            _uiState.value = _uiState.value.copy(updatingTaskId = taskId)
             
             completeTaskUseCase(taskId).fold(
                 onSuccess = { updatedTask ->
@@ -119,13 +119,13 @@ class TasksViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         allTasks = currentAllTasks,
                         tasks = currentFilteredTasks,
-                        isUpdatingTask = false,
+                        updatingTaskId = null,
                         snackbarMessage = "Task updated successfully"
                     )
                 },
                 onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
-                        isUpdatingTask = false,
+                        updatingTaskId = null,
                         error = exception.message ?: "Failed to toggle task completion"
                     )
                 }
@@ -214,7 +214,7 @@ data class TasksUiState(
     val searchQuery: String = "",
     val isLoading: Boolean = false,
     val isCreatingTask: Boolean = false,
-    val isUpdatingTask: Boolean = false,
+    val updatingTaskId: String? = null,
     val isDeletingTask: Boolean = false,
     val error: String? = null,
     val snackbarMessage: String? = null

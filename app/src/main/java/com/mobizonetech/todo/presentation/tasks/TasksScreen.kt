@@ -238,7 +238,7 @@ fun TasksScreen(
                                         taskToDelete = task.id
                                         showDeleteConfirmation = true
                                     },
-                                    isLoading = uiState.isUpdatingTask
+                                    isLoading = uiState.updatingTaskId == task.id
                                 )
                             }
                         }

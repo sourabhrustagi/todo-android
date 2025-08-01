@@ -37,7 +37,7 @@ class TasksViewModel @Inject constructor(
                     onSuccess = { tasks ->
                         _uiState.value = _uiState.value.copy(
                             allTasks = tasks,
-                            tasks = filterAndSearchTasks(tasks, _uiState.value.searchQuery),
+                            tasks = filterAndSearchTasks(tasks, _uiState.value.searchQuery, _uiState.value.selectedPriority),
                             isLoading = false,
                             error = null
                         )
@@ -118,7 +118,7 @@ class TasksViewModel @Inject constructor(
                     
                     _uiState.value = _uiState.value.copy(
                         allTasks = currentAllTasks,
-                        tasks = currentFilteredTasks,
+                        tasks = filterAndSearchTasks(currentAllTasks, _uiState.value.searchQuery, _uiState.value.selectedPriority),
                         updatingTaskId = null,
                         snackbarMessage = "Task updated successfully"
                     )
@@ -154,7 +154,7 @@ class TasksViewModel @Inject constructor(
                         
                         _uiState.value = _uiState.value.copy(
                             allTasks = currentAllTasks,
-                            tasks = currentFilteredTasks,
+                            tasks = filterAndSearchTasks(currentAllTasks, _uiState.value.searchQuery, _uiState.value.selectedPriority),
                             isDeletingTask = false,
                             snackbarMessage = "Task deleted successfully"
                         )
@@ -178,7 +178,14 @@ class TasksViewModel @Inject constructor(
     fun updateSearchQuery(query: String) {
         _uiState.value = _uiState.value.copy(
             searchQuery = query,
-            tasks = filterAndSearchTasks(_uiState.value.allTasks, query)
+            tasks = filterAndSearchTasks(_uiState.value.allTasks, query, _uiState.value.selectedPriority)
+        )
+    }
+    
+    fun filterByPriority(priority: TaskPriority?) {
+        _uiState.value = _uiState.value.copy(
+            selectedPriority = priority,
+            tasks = filterAndSearchTasks(_uiState.value.allTasks, _uiState.value.searchQuery, priority)
         )
     }
     
@@ -192,9 +199,17 @@ class TasksViewModel @Inject constructor(
     
     private fun filterAndSearchTasks(
         tasks: List<Task>,
-        searchQuery: String
+        searchQuery: String,
+        priority: TaskPriority? = null
     ): List<Task> {
         var filteredTasks = tasks
+        
+        // Apply priority filter
+        if (priority != null) {
+            filteredTasks = filteredTasks.filter { task ->
+                task.priority == priority
+            }
+        }
         
         // Apply search filter
         if (searchQuery.isNotBlank()) {
@@ -212,6 +227,7 @@ data class TasksUiState(
     val tasks: List<Task> = emptyList(),
     val allTasks: List<Task> = emptyList(),
     val searchQuery: String = "",
+    val selectedPriority: TaskPriority? = null,
     val isLoading: Boolean = false,
     val isCreatingTask: Boolean = false,
     val updatingTaskId: String? = null,

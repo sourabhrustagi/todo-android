@@ -101,7 +101,7 @@ fun TasksScreen(
                                         )
                                     },
                                     onClick = {
-                                        // TODO: Implement priority filtering
+                                        viewModel.filterByPriority(priority)
                                         showMenu = false
                                     }
                                 )
@@ -118,7 +118,7 @@ fun TasksScreen(
                                     )
                                 },
                                 onClick = {
-                                    // TODO: Show all tasks (already showing)
+                                    viewModel.filterByPriority(null)
                                     showMenu = false
                                 }
                             )

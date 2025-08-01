@@ -237,8 +237,10 @@ fun TasksScreen(
                                 TaskItem(
                                     task = task,
                                     onTaskClick = { 
-                                        viewModel.toggleTaskCompletion(task.id)
                                         onNavigateToTaskDetail(task.id)
+                                    },
+                                    onCheckboxClick = { 
+                                        viewModel.toggleTaskCompletion(task.id)
                                     },
                                     onDeleteClick = { 
                                         taskToDelete = task.id

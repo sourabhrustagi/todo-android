@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -30,6 +31,7 @@ import java.time.format.DateTimeFormatter
 fun TaskItem(
     task: Task,
     onTaskClick: () -> Unit,
+    onCheckboxClick: () -> Unit,
     onDeleteClick: () -> Unit,
     isLoading: Boolean = false,
     modifier: Modifier = Modifier
@@ -107,7 +109,7 @@ fun TaskItem(
                 } else {
                     Checkbox(
                         checked = task.completed,
-                        onCheckedChange = { onTaskClick() },
+                        onCheckedChange = { onCheckboxClick() },
                         modifier = Modifier.size(24.dp),
                         colors = CheckboxDefaults.colors(
                             checkedColor = MaterialTheme.colorScheme.primary,
@@ -120,7 +122,9 @@ fun TaskItem(
                 
                 // Task content
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onTaskClick() }
                 ) {
                     Text(
                         text = task.title,
@@ -232,6 +236,7 @@ fun TaskItemPreview() {
     TaskItem(
         task = sampleTask,
         onTaskClick = {},
+        onCheckboxClick = {},
         onDeleteClick = {}
     )
 }
@@ -253,6 +258,7 @@ fun TaskItemCompletedPreview() {
     TaskItem(
         task = sampleTask,
         onTaskClick = {},
+        onCheckboxClick = {},
         onDeleteClick = {}
     )
 } 

@@ -170,7 +170,7 @@ fun ScaleInAnimation(
         visible = visible,
         enter = scaleIn(
             initialScale = 0.8f,
-            animationSpec = tween(500, easing = EaseOutBack)
+            animationSpec = tween(500, easing = EaseOutCubic)
         ) + fadeIn(animationSpec = tween(500)),
         modifier = modifier
     ) {

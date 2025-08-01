@@ -49,14 +49,14 @@ fun TaskItem(
             animationSpec = tween(300, easing = EaseOutCubic)
         ) + fadeIn(animationSpec = tween(300)) + scaleIn(
             initialScale = 0.8f,
-            animationSpec = tween(300, easing = EaseOutBack)
+            animationSpec = tween(300, easing = EaseOutCubic)
         ),
         exit = slideOutVertically(
             targetOffsetY = { -it / 2 },
             animationSpec = tween(300, easing = EaseInCubic)
         ) + fadeOut(animationSpec = tween(300)) + scaleOut(
             targetScale = 0.8f,
-            animationSpec = tween(300, easing = EaseInBack)
+            animationSpec = tween(300, easing = EaseInCubic)
         )
     ) {
         Card(

@@ -1,5 +1,8 @@
 package com.mobizonetech.todo.data.api.interceptors
 
+import io.mockk.every
+import io.mockk.mockk
+import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -27,8 +30,11 @@ class MockInterceptorTest {
             .post(okhttp3.RequestBody.create(null, "{}"))
             .build()
 
+        val chain = mockk<Interceptor.Chain>()
+        every { chain.request() } returns request
+
         // When
-        val response = mockInterceptor.intercept(okhttp3.Interceptor.Chain { request })
+        val response = mockInterceptor.intercept(chain)
 
         // Then
         assertEquals(200, response.code)
@@ -43,8 +49,11 @@ class MockInterceptorTest {
             .post(okhttp3.RequestBody.create(null, "{}"))
             .build()
 
+        val chain = mockk<Interceptor.Chain>()
+        every { chain.request() } returns request
+
         // When
-        val response = mockInterceptor.intercept(okhttp3.Interceptor.Chain { request })
+        val response = mockInterceptor.intercept(chain)
 
         // Then
         assertEquals(200, response.code)
@@ -59,8 +68,11 @@ class MockInterceptorTest {
             .post(okhttp3.RequestBody.create(null, "{}"))
             .build()
 
+        val chain = mockk<Interceptor.Chain>()
+        every { chain.request() } returns request
+
         // When
-        val response = mockInterceptor.intercept(okhttp3.Interceptor.Chain { request })
+        val response = mockInterceptor.intercept(chain)
 
         // Then
         assertEquals(200, response.code)
@@ -75,8 +87,11 @@ class MockInterceptorTest {
             .get()
             .build()
 
+        val chain = mockk<Interceptor.Chain>()
+        every { chain.request() } returns request
+
         // When
-        val response = mockInterceptor.intercept(okhttp3.Interceptor.Chain { request })
+        val response = mockInterceptor.intercept(chain)
 
         // Then
         assertEquals(200, response.code)
@@ -93,8 +108,11 @@ class MockInterceptorTest {
             .post(okhttp3.RequestBody.create(null, "{}"))
             .build()
 
+        val chain = mockk<Interceptor.Chain>()
+        every { chain.request() } returns request
+
         // When
-        val response = mockInterceptor.intercept(okhttp3.Interceptor.Chain { request })
+        val response = mockInterceptor.intercept(chain)
 
         // Then
         assertEquals(201, response.code)

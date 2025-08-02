@@ -1,0 +1,335 @@
+package com.mobizonetech.todo.data.repository
+
+import com.mobizonetech.todo.data.api.TodoApiService
+import com.mobizonetech.todo.data.database.dao.UserDao
+import com.mobizonetech.todo.data.database.entities.UserEntity
+import com.mobizonetech.todo.domain.models.User
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+class AuthRepositoryImplTest {
+
+    private lateinit var authRepositoryImpl: AuthRepositoryImpl
+    private lateinit var todoApiService: TodoApiService
+    private lateinit var userDao: UserDao
+
+    @Before
+    fun setup() {
+        todoApiService = mockk()
+        userDao = mockk()
+        authRepositoryImpl = AuthRepositoryImpl(todoApiService, userDao)
+    }
+
+    @Test
+    fun `login should return success when API call succeeds`() = runTest {
+        val phoneNumber = "1234567890"
+        val expectedMessage = "OTP sent successfully"
+        
+        coEvery { todoApiService.login(phoneNumber) } returns expectedMessage
+        
+        val result = authRepositoryImpl.login(phoneNumber)
+        
+        assertTrue(result.isSuccess)
+        assertEquals(expectedMessage, result.getOrNull())
+    }
+
+    @Test
+    fun `login should handle API failure`() = runTest {
+        val phoneNumber = "1234567890"
+        val errorMessage = "Invalid phone number"
+        
+        coEvery { todoApiService.login(phoneNumber) } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.login(phoneNumber)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `verifyOtp should return success when API call succeeds`() = runTest {
+        val phoneNumber = "1234567890"
+        val otp = "123456"
+        val expectedMessage = "Login successful"
+        
+        coEvery { todoApiService.verifyOtp(phoneNumber, otp) } returns expectedMessage
+        
+        val result = authRepositoryImpl.verifyOtp(phoneNumber, otp)
+        
+        assertTrue(result.isSuccess)
+        assertEquals(expectedMessage, result.getOrNull())
+    }
+
+    @Test
+    fun `verifyOtp should handle API failure`() = runTest {
+        val phoneNumber = "1234567890"
+        val otp = "000000"
+        val errorMessage = "Invalid OTP"
+        
+        coEvery { todoApiService.verifyOtp(phoneNumber, otp) } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.verifyOtp(phoneNumber, otp)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `logout should return success when API call succeeds`() = runTest {
+        val expectedMessage = "Logged out successfully"
+        
+        coEvery { todoApiService.logout() } returns expectedMessage
+        coEvery { userDao.clearUser() } returns Unit
+        
+        val result = authRepositoryImpl.logout()
+        
+        assertTrue(result.isSuccess)
+        assertEquals(expectedMessage, result.getOrNull())
+    }
+
+    @Test
+    fun `logout should handle API failure`() = runTest {
+        val errorMessage = "Logout failed"
+        
+        coEvery { todoApiService.logout() } throws Exception(errorMessage)
+        coEvery { userDao.clearUser() } returns Unit
+        
+        val result = authRepositoryImpl.logout()
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `isLoggedIn should return true when user exists in database`() = runTest {
+        val mockUserEntity = UserEntity(
+            id = 1,
+            name = "Test User",
+            email = "test@example.com",
+            phoneNumber = "1234567890"
+        )
+        
+        coEvery { userDao.getCurrentUser() } returns flowOf(mockUserEntity)
+        
+        val result = authRepositoryImpl.isLoggedIn()
+        
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrNull() == true)
+    }
+
+    @Test
+    fun `isLoggedIn should return false when no user in database`() = runTest {
+        coEvery { userDao.getCurrentUser() } returns flowOf(null)
+        
+        val result = authRepositoryImpl.isLoggedIn()
+        
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrNull() == false)
+    }
+
+    @Test
+    fun `isLoggedIn should handle database error`() = runTest {
+        val errorMessage = "Database error"
+        
+        coEvery { userDao.getCurrentUser() } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.isLoggedIn()
+        
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrNull() == false) // Default to false on error
+    }
+
+    @Test
+    fun `getCurrentUser should return user from database`() = runTest {
+        val mockUserEntity = UserEntity(
+            id = 1,
+            name = "Test User",
+            email = "test@example.com",
+            phoneNumber = "1234567890"
+        )
+        
+        coEvery { userDao.getCurrentUser() } returns flowOf(mockUserEntity)
+        
+        val result = authRepositoryImpl.getCurrentUser()
+        
+        assertTrue(result.isSuccess)
+        val user = result.getOrNull()
+        assertNotNull(user)
+        assertEquals(mockUserEntity.id, user?.id)
+        assertEquals(mockUserEntity.name, user?.name)
+        assertEquals(mockUserEntity.email, user?.email)
+        assertEquals(mockUserEntity.phoneNumber, user?.phoneNumber)
+    }
+
+    @Test
+    fun `getCurrentUser should return null when no user in database`() = runTest {
+        coEvery { userDao.getCurrentUser() } returns flowOf(null)
+        
+        val result = authRepositoryImpl.getCurrentUser()
+        
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrNull() == null)
+    }
+
+    @Test
+    fun `getCurrentUser should handle database error`() = runTest {
+        val errorMessage = "Database error"
+        
+        coEvery { userDao.getCurrentUser() } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.getCurrentUser()
+        
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrNull() == null) // Default to null on error
+    }
+
+    @Test
+    fun `login with empty phone number should fail`() = runTest {
+        val phoneNumber = ""
+        val errorMessage = "Phone number cannot be empty"
+        
+        coEvery { todoApiService.login(phoneNumber) } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.login(phoneNumber)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `login with invalid phone number format should fail`() = runTest {
+        val phoneNumber = "invalid"
+        val errorMessage = "Invalid phone number format"
+        
+        coEvery { todoApiService.login(phoneNumber) } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.login(phoneNumber)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `verifyOtp with empty OTP should fail`() = runTest {
+        val phoneNumber = "1234567890"
+        val otp = ""
+        val errorMessage = "OTP cannot be empty"
+        
+        coEvery { todoApiService.verifyOtp(phoneNumber, otp) } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.verifyOtp(phoneNumber, otp)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `verifyOtp with invalid OTP format should fail`() = runTest {
+        val phoneNumber = "1234567890"
+        val otp = "12345" // Too short
+        val errorMessage = "Invalid OTP format"
+        
+        coEvery { todoApiService.verifyOtp(phoneNumber, otp) } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.verifyOtp(phoneNumber, otp)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `network error during login should be handled`() = runTest {
+        val phoneNumber = "1234567890"
+        val errorMessage = "Network error occurred"
+        
+        coEvery { todoApiService.login(phoneNumber) } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.login(phoneNumber)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `network error during OTP verification should be handled`() = runTest {
+        val phoneNumber = "1234567890"
+        val otp = "123456"
+        val errorMessage = "Network error occurred"
+        
+        coEvery { todoApiService.verifyOtp(phoneNumber, otp) } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.verifyOtp(phoneNumber, otp)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `network error during logout should be handled`() = runTest {
+        val errorMessage = "Network error occurred"
+        
+        coEvery { todoApiService.logout() } throws Exception(errorMessage)
+        coEvery { userDao.clearUser() } returns Unit
+        
+        val result = authRepositoryImpl.logout()
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `database error during logout should be handled`() = runTest {
+        val errorMessage = "Database error occurred"
+        
+        coEvery { todoApiService.logout() } returns "Success"
+        coEvery { userDao.clearUser() } throws Exception(errorMessage)
+        
+        val result = authRepositoryImpl.logout()
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `multiple login calls should work correctly`() = runTest {
+        val phoneNumber = "1234567890"
+        val expectedMessage = "OTP sent successfully"
+        
+        coEvery { todoApiService.login(phoneNumber) } returns expectedMessage
+        
+        val result1 = authRepositoryImpl.login(phoneNumber)
+        val result2 = authRepositoryImpl.login(phoneNumber)
+        
+        assertTrue(result1.isSuccess)
+        assertTrue(result2.isSuccess)
+        assertEquals(expectedMessage, result1.getOrNull())
+        assertEquals(expectedMessage, result2.getOrNull())
+    }
+
+    @Test
+    fun `user with null email should be handled`() = runTest {
+        val mockUserEntity = UserEntity(
+            id = 1,
+            name = "Test User",
+            email = null,
+            phoneNumber = "1234567890"
+        )
+        
+        coEvery { userDao.getCurrentUser() } returns flowOf(mockUserEntity)
+        
+        val result = authRepositoryImpl.getCurrentUser()
+        
+        assertTrue(result.isSuccess)
+        val user = result.getOrNull()
+        assertNotNull(user)
+        assertEquals(null, user?.email)
+    }
+} 

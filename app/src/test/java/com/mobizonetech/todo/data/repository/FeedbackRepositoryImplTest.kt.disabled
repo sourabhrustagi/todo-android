@@ -1,0 +1,342 @@
+package com.mobizonetech.todo.data.repository
+
+import com.mobizonetech.todo.data.api.TodoApiService
+import com.mobizonetech.todo.data.api.models.ApiResponse
+import com.mobizonetech.todo.data.database.dao.FeedbackDao
+import com.mobizonetech.todo.data.database.entities.FeedbackEntity
+import com.mobizonetech.todo.domain.models.Feedback
+import com.mobizonetech.todo.domain.models.FeedbackCategory
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import java.time.LocalDateTime
+
+class FeedbackRepositoryImplTest {
+
+    private lateinit var feedbackRepositoryImpl: FeedbackRepositoryImpl
+    private lateinit var todoApiService: TodoApiService
+    private lateinit var feedbackDao: FeedbackDao
+
+    @Before
+    fun setup() {
+        todoApiService = mockk()
+        feedbackDao = mockk()
+        feedbackRepositoryImpl = FeedbackRepositoryImpl(todoApiService, feedbackDao)
+    }
+
+    @Test
+    fun `submitFeedback should return success when API call succeeds`() = runTest {
+        val rating = 5
+        val comment = "Great app!"
+        val category = FeedbackCategory.GENERAL
+        val expectedFeedback = FeedbackApiModel.Feedback(
+            id = "feedback-1",
+            rating = rating,
+            comment = comment,
+            category = category.name,
+            createdAt = LocalDateTime.now()
+        )
+        
+        coEvery { todoApiService.submitFeedback(any()) } returns ApiResponse(success = true, data = expectedFeedback)
+        coEvery { feedbackDao.insertFeedback(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(rating, comment, category)
+        
+        assertTrue(result.isSuccess)
+        assertNotNull(result.getOrNull())
+        assertEquals(rating, result.getOrNull()?.rating)
+        assertEquals(comment, result.getOrNull()?.comment)
+        assertEquals(category, result.getOrNull()?.category)
+    }
+
+    @Test
+    fun `submitFeedback should handle API failure`() = runTest {
+        val rating = 3
+        val comment = "Test feedback"
+        val category = FeedbackCategory.BUG
+        val errorMessage = "Failed to submit feedback"
+        
+        coEvery { todoApiService.submitFeedback(any()) } throws Exception(errorMessage)
+        coEvery { feedbackDao.insertFeedback(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(rating, comment, category)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `submitFeedback with null comment should succeed`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 4,
+            comment = null,
+            category = FeedbackCategory.FEATURE_REQUEST,
+            createdAt = LocalDateTime.now()
+        )
+        val expectedMessage = "Feedback submitted successfully"
+        
+        coEvery { todoApiService.submitFeedback(any()) } returns ApiResponse.success(expectedMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isSuccess)
+        assertEquals(expectedMessage, result.getOrNull())
+    }
+
+    @Test
+    fun `submitFeedback with empty comment should succeed`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 2,
+            comment = "",
+            category = FeedbackCategory.GENERAL,
+            createdAt = LocalDateTime.now()
+        )
+        val expectedMessage = "Feedback submitted successfully"
+        
+        coEvery { todoApiService.submitFeedback(any()) } returns expectedMessage
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isSuccess)
+        assertEquals(expectedMessage, result.getOrNull())
+    }
+
+    @Test
+    fun `submitFeedback with all rating values should work`() = runTest {
+        val categories = FeedbackCategory.values()
+        
+        for (rating in 1..5) {
+            for (category in categories) {
+                val feedback = Feedback(
+                    id = "0",
+                    rating = rating,
+                    comment = "Test feedback for rating $rating and category $category",
+                    category = category,
+                    createdAt = LocalDateTime.now()
+                )
+                val expectedMessage = "Feedback submitted successfully"
+                
+                coEvery { todoApiService.submitFeedback(any()) } returns ApiResponse.success(expectedMessage)
+                coEvery { feedbackDao.insert(any()) } returns Unit
+                
+                val result = feedbackRepositoryImpl.submitFeedback(feedback)
+                
+                assertTrue(result.isSuccess)
+                assertEquals(expectedMessage, result.getOrNull())
+            }
+        }
+    }
+
+    @Test
+    fun `submitFeedback with invalid rating should fail`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 0,
+            comment = "Test feedback",
+            category = FeedbackCategory.BUG,
+            createdAt = LocalDateTime.now()
+        )
+        val errorMessage = "Rating must be between 1 and 5"
+        
+        coEvery { todoApiService.submitFeedback(any()) } throws Exception(errorMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `submitFeedback with rating above 5 should fail`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 6,
+            comment = "Test feedback",
+            category = FeedbackCategory.GENERAL,
+            createdAt = LocalDateTime.now()
+        )
+        val errorMessage = "Rating must be between 1 and 5"
+        
+        coEvery { todoApiService.submitFeedback(any()) } throws Exception(errorMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `submitFeedback should handle database error`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 5,
+            comment = "Test feedback",
+            category = FeedbackCategory.FEATURE_REQUEST,
+            createdAt = LocalDateTime.now()
+        )
+        val errorMessage = "Database error occurred"
+        
+        coEvery { todoApiService.submitFeedback(any()) } returns ApiResponse.success("Success")
+        coEvery { feedbackDao.insert(any()) } throws Exception(errorMessage)
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `network error during feedback submission should be handled`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 4,
+            comment = "Test feedback",
+            category = FeedbackCategory.BUG,
+            createdAt = LocalDateTime.now()
+        )
+        val errorMessage = "Network error occurred"
+        
+        coEvery { todoApiService.submitFeedback(any()) } throws Exception(errorMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `multiple feedback submissions should work correctly`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 3,
+            comment = "Test feedback",
+            category = FeedbackCategory.GENERAL,
+            createdAt = LocalDateTime.now()
+        )
+        val expectedMessage = "Feedback submitted successfully"
+        
+        coEvery { todoApiService.submitFeedback(any()) } returns ApiResponse.success(expectedMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result1 = feedbackRepositoryImpl.submitFeedback(feedback)
+        val result2 = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result1.isSuccess)
+        assertTrue(result2.isSuccess)
+        assertEquals(expectedMessage, result1.getOrNull())
+        assertEquals(expectedMessage, result2.getOrNull())
+    }
+
+    @Test
+    fun `feedback with long comment should succeed`() = runTest {
+        val longComment = "A".repeat(1000)
+        val feedback = Feedback(
+            id = "0",
+            rating = 5,
+            comment = longComment,
+            category = FeedbackCategory.FEATURE_REQUEST,
+            createdAt = LocalDateTime.now()
+        )
+        val expectedMessage = "Feedback submitted successfully"
+        
+        coEvery { todoApiService.submitFeedback(any()) } returns ApiResponse.success(expectedMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isSuccess)
+        assertEquals(expectedMessage, result.getOrNull())
+    }
+
+    @Test
+    fun `feedback with special characters should succeed`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 4,
+            comment = "Feedback with special chars: !@#$%^&*() and emojis: 🚀 📱 💻",
+            category = FeedbackCategory.GENERAL,
+            createdAt = LocalDateTime.now()
+        )
+        val expectedMessage = "Feedback submitted successfully"
+        
+        coEvery { todoApiService.submitFeedback(any()) } returns ApiResponse.success(expectedMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isSuccess)
+        assertEquals(expectedMessage, result.getOrNull())
+    }
+
+    @Test
+    fun `feedback with minimum rating should succeed`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 1,
+            comment = "Minimum rating feedback",
+            category = FeedbackCategory.BUG,
+            createdAt = LocalDateTime.now()
+        )
+        val expectedMessage = "Feedback submitted successfully"
+        
+        coEvery { todoApiService.submitFeedback(any()) } returns ApiResponse.success(expectedMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isSuccess)
+        assertEquals(expectedMessage, result.getOrNull())
+    }
+
+    @Test
+    fun `feedback with maximum rating should succeed`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 5,
+            comment = "Maximum rating feedback",
+            category = FeedbackCategory.FEATURE_REQUEST,
+            createdAt = LocalDateTime.now()
+        )
+        val expectedMessage = "Feedback submitted successfully"
+        
+        coEvery { todoApiService.submitFeedback(any()) } returns ApiResponse.success(expectedMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isSuccess)
+        assertEquals(expectedMessage, result.getOrNull())
+    }
+
+    @Test
+    fun `validation error should be handled properly`() = runTest {
+        val feedback = Feedback(
+            id = "0",
+            rating = 3,
+            comment = "Test feedback",
+            category = FeedbackCategory.GENERAL,
+            createdAt = LocalDateTime.now()
+        )
+        val errorMessage = "Comment is too long"
+        
+        coEvery { todoApiService.submitFeedback(any()) } throws Exception(errorMessage)
+        coEvery { feedbackDao.insert(any()) } returns Unit
+        
+        val result = feedbackRepositoryImpl.submitFeedback(feedback)
+        
+        assertTrue(result.isFailure)
+        assertEquals(errorMessage, result.exceptionOrNull()?.message)
+    }
+} 

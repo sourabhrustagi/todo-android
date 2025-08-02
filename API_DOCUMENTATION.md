@@ -56,8 +56,8 @@ Authorization: Bearer {access_token}
 {
   "success": true,
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "refresh_token_here",
+    "token": "mock_access_token_123",
+    "refreshToken": "mock_refresh_token_123",
     "expiresIn": 3600,
     "user": {
       "id": "user_123",
@@ -91,6 +91,13 @@ Authorization: Bearer {access_token}
 **Query Parameters**:
 - `page` (optional): Page number for pagination (default: 1)
 - `limit` (optional): Number of items per page (default: 20)
+- `priority` (optional): Filter by priority (high, medium, low)
+- `category` (optional): Filter by category ID
+- `dueDate` (optional): Filter by due date (YYYY-MM-DD)
+- `completed` (optional): Filter by completion status (true, false)
+- `search` (optional): Search in title and description
+- `sortBy` (optional): Sort field (title, priority, dueDate, createdAt)
+- `sortOrder` (optional): Sort order (asc, desc)
 
 **Response (200)**:
 ```json
@@ -102,6 +109,14 @@ Authorization: Bearer {access_token}
         "id": "task_123",
         "title": "Complete project documentation",
         "description": "Write comprehensive documentation for the new feature",
+        "priority": "high",
+        "category": {
+          "id": "cat_1",
+          "name": "Work",
+          "color": "#FF5722",
+          "createdAt": "2024-01-15T10:30:00Z"
+        },
+        "dueDate": "2024-01-20T23:59:59Z",
         "completed": false,
         "createdAt": "2024-01-15T10:30:00Z",
         "updatedAt": "2024-01-15T10:30:00Z"
@@ -124,7 +139,10 @@ Authorization: Bearer {access_token}
 ```json
 {
   "title": "Complete project documentation",
-  "description": "Write comprehensive documentation for the new feature"
+  "description": "Write comprehensive documentation for the new feature",
+  "priority": "high",
+  "categoryId": "cat_1",
+  "dueDate": "2024-01-20T23:59:59Z"
 }
 ```
 
@@ -136,6 +154,14 @@ Authorization: Bearer {access_token}
     "id": "task_123",
     "title": "Complete project documentation",
     "description": "Write comprehensive documentation for the new feature",
+    "priority": "high",
+    "category": {
+      "id": "cat_1",
+      "name": "Work",
+      "color": "#FF5722",
+      "createdAt": "2024-01-15T10:30:00Z"
+    },
+    "dueDate": "2024-01-20T23:59:59Z",
     "completed": false,
     "createdAt": "2024-01-15T10:30:00Z",
     "updatedAt": "2024-01-15T10:30:00Z"
@@ -154,6 +180,14 @@ Authorization: Bearer {access_token}
     "id": "task_123",
     "title": "Complete project documentation",
     "description": "Write comprehensive documentation for the new feature",
+    "priority": "high",
+    "category": {
+      "id": "cat_1",
+      "name": "Work",
+      "color": "#FF5722",
+      "createdAt": "2024-01-15T10:30:00Z"
+    },
+    "dueDate": "2024-01-20T23:59:59Z",
     "completed": false,
     "createdAt": "2024-01-15T10:30:00Z",
     "updatedAt": "2024-01-15T10:30:00Z"
@@ -169,6 +203,9 @@ Authorization: Bearer {access_token}
 {
   "title": "Updated task title",
   "description": "Updated task description",
+  "priority": "medium",
+  "categoryId": "cat_2",
+  "dueDate": "2024-01-25T23:59:59Z",
   "completed": true
 }
 ```
@@ -181,6 +218,14 @@ Authorization: Bearer {access_token}
     "id": "task_123",
     "title": "Updated task title",
     "description": "Updated task description",
+    "priority": "medium",
+    "category": {
+      "id": "cat_2",
+      "name": "Personal",
+      "color": "#4CAF50",
+      "createdAt": "2024-01-15T10:30:00Z"
+    },
+    "dueDate": "2024-01-25T23:59:59Z",
     "completed": true,
     "createdAt": "2024-01-15T10:30:00Z",
     "updatedAt": "2024-01-15T11:45:00Z"
@@ -210,6 +255,14 @@ Authorization: Bearer {access_token}
     "id": "task_123",
     "title": "Complete project documentation",
     "description": "Write comprehensive documentation for the new feature",
+    "priority": "high",
+    "category": {
+      "id": "cat_1",
+      "name": "Work",
+      "color": "#FF5722",
+      "createdAt": "2024-01-15T10:30:00Z"
+    },
+    "dueDate": "2024-01-20T23:59:59Z",
     "completed": true,
     "createdAt": "2024-01-15T10:30:00Z",
     "updatedAt": "2024-01-15T11:45:00Z"
@@ -389,6 +442,66 @@ Authorization: Bearer {access_token}
 }
 ```
 
+#### POST /categories
+**Create a new category**
+
+**Request Body**:
+```json
+{
+  "name": "Work",
+  "color": "#FF5722"
+}
+```
+
+**Response (201)**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "cat_1",
+    "name": "Work",
+    "color": "#FF5722",
+    "createdAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+#### PUT /categories/{categoryId}
+**Update a category**
+
+**Request Body**:
+```json
+{
+  "name": "Updated Work",
+  "color": "#FF9800"
+}
+```
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "cat_1",
+    "name": "Updated Work",
+    "color": "#FF9800",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T11:45:00Z"
+  }
+}
+```
+
+#### DELETE /categories/{categoryId}
+**Delete a category**
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "message": "Category deleted successfully"
+}
+```
+
 ### Bulk Operations
 
 #### POST /tasks/bulk
@@ -398,7 +511,9 @@ Authorization: Bearer {access_token}
 ```json
 {
   "operation": "complete",
-  "taskIds": ["task_123", "task_124", "task_125"]
+  "taskIds": ["task_123", "task_124", "task_125"],
+  "categoryId": "cat_1",
+  "priority": "high"
 }
 ```
 
@@ -443,7 +558,8 @@ Authorization: Bearer {access_token}
         "category": {
           "id": "cat_1",
           "name": "Work",
-          "color": "#FF5722"
+          "color": "#FF5722",
+          "createdAt": "2024-01-15T10:30:00Z"
         },
         "dueDate": "2024-01-20T23:59:59Z",
         "completed": false,
@@ -589,6 +705,17 @@ Authorization: Bearer {access_token}
     "details": {
       "title": "Title is required"
     }
+  }
+}
+```
+
+### Not Found Error
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Endpoint not found"
   }
 }
 ```

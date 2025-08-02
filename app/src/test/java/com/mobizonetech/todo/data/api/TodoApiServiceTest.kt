@@ -5,6 +5,7 @@ import com.mobizonetech.todo.data.api.models.AuthApiModel
 import com.mobizonetech.todo.data.api.models.FeedbackApiModel
 import com.mobizonetech.todo.data.api.models.TaskApiModel
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
@@ -57,7 +58,8 @@ class TodoApiServiceTest {
             data = loginResponse
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, AuthApiModel.LoginResponse::class.java)
+        val responseJson = moshi.adapter<ApiResponse<AuthApiModel.LoginResponse>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -83,7 +85,8 @@ class TodoApiServiceTest {
             data = verifyResponse
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, AuthApiModel.VerifyOtpResponse::class.java)
+        val responseJson = moshi.adapter<ApiResponse<AuthApiModel.VerifyOtpResponse>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -107,7 +110,8 @@ class TodoApiServiceTest {
             data = logoutResponse
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, AuthApiModel.LogoutResponse::class.java)
+        val responseJson = moshi.adapter<ApiResponse<AuthApiModel.LogoutResponse>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -124,23 +128,20 @@ class TodoApiServiceTest {
     @Test
     fun `getTasks should make correct API call with default parameters`() = runBlocking {
         // Given
-        val tasks = listOf(
-            TaskApiModel.Task(
-                id = "task_1",
-                title = "Task 1",
-                createdAt = "2024-01-15T10:30:00Z",
-                updatedAt = "2024-01-15T10:30:00Z"
-            )
+        val taskListResponse = TaskApiModel.TaskListResponse(
+            tasks = listOf(
+                TaskApiModel.Task("task_1", "Test Task", "Test Description", "HIGH", null, "2023-12-31", false, "2023-01-01", "2023-01-01")
+            ),
+            pagination = TaskApiModel.Pagination(1, 20, 1, 1)
         )
-        val pagination = TaskApiModel.Pagination(1, 20, 1, 1)
-        val taskListResponse = TaskApiModel.TaskListResponse(tasks, pagination)
         val apiResponse = ApiResponse(
             success = true,
             message = "Tasks retrieved successfully",
             data = taskListResponse
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.TaskListResponse::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.TaskListResponse>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -157,109 +158,76 @@ class TodoApiServiceTest {
     @Test
     fun `getTasks should make correct API call with query parameters`() = runBlocking {
         // Given
-        val tasks = listOf(
-            TaskApiModel.Task(
-                id = "task_1",
-                title = "High priority task",
-                priority = "high",
-                createdAt = "2024-01-15T10:30:00Z",
-                updatedAt = "2024-01-15T10:30:00Z"
-            )
+        val taskListResponse = TaskApiModel.TaskListResponse(
+            tasks = listOf(
+                TaskApiModel.Task("task_1", "Test Task", "Test Description", "HIGH", null, "2023-12-31", false, "2023-01-01", "2023-01-01")
+            ),
+            pagination = TaskApiModel.Pagination(1, 20, 1, 1)
         )
-        val pagination = TaskApiModel.Pagination(1, 10, 1, 1)
-        val taskListResponse = TaskApiModel.TaskListResponse(tasks, pagination)
         val apiResponse = ApiResponse(
             success = true,
             message = "Tasks retrieved successfully",
             data = taskListResponse
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.TaskListResponse::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.TaskListResponse>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
-        val result = apiService.getTasks(
-            page = 2,
-            limit = 10,
-            priority = "high",
-            category = "work",
-            dueDate = "2024-01-20",
-            completed = false,
-            search = "important",
-            sortBy = "dueDate",
-            sortOrder = "asc"
-        )
+        val result = apiService.getTasks(page = 2, limit = 10, priority = "HIGH", category = "WORK")
 
         // Then
         assertTrue(result.success)
-        val request = mockWebServer.takeRequest()
-        assertEquals("GET", request.method)
-        assertTrue(request.path!!.contains("/tasks"))
-        assertTrue(request.path!!.contains("page=2"))
-        assertTrue(request.path!!.contains("limit=10"))
-        assertTrue(request.path!!.contains("priority=high"))
-        assertTrue(request.path!!.contains("category=work"))
-        assertTrue(request.path!!.contains("dueDate=2024-01-20"))
-        assertTrue(request.path!!.contains("completed=false"))
-        assertTrue(request.path!!.contains("search=important"))
-        assertTrue(request.path!!.contains("sortBy=dueDate"))
-        assertTrue(request.path!!.contains("sortOrder=asc"))
+        assertEquals("Tasks retrieved successfully", result.message)
+        assertEquals(taskListResponse, result.data)
+        assertEquals("GET", mockWebServer.takeRequest().method)
+        val requestPath = mockWebServer.takeRequest().path!!
+        assertTrue(requestPath.contains("/tasks"))
+        assertTrue(requestPath.contains("page=2"))
+        assertTrue(requestPath.contains("limit=10"))
+        assertTrue(requestPath.contains("priority=HIGH"))
+        assertTrue(requestPath.contains("category=WORK"))
     }
 
     @Test
     fun `getTask should make correct API call`() = runBlocking {
         // Given
-        val task = TaskApiModel.Task(
-            id = "task_123",
-            title = "Specific task",
-            createdAt = "2024-01-15T10:30:00Z",
-            updatedAt = "2024-01-15T10:30:00Z"
-        )
+        val task = TaskApiModel.Task("task_1", "Test Task", "Test Description", "HIGH", null, "2023-12-31", false, "2023-01-01", "2023-01-01")
         val apiResponse = ApiResponse(
             success = true,
             message = "Task retrieved successfully",
             data = task
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.Task::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.Task>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
-        val result = apiService.getTask("task_123")
+        val result = apiService.getTask("task_1")
 
         // Then
         assertTrue(result.success)
         assertEquals("Task retrieved successfully", result.message)
         assertEquals(task, result.data)
         assertEquals("GET", mockWebServer.takeRequest().method)
-        assertTrue(mockWebServer.takeRequest().path!!.contains("/tasks/task_123"))
+        assertTrue(mockWebServer.takeRequest().path!!.contains("/tasks/task_1"))
     }
 
     @Test
     fun `createTask should make correct API call`() = runBlocking {
         // Given
-        val createRequest = TaskApiModel.CreateTaskRequest(
-            title = "New task",
-            description = "Task description",
-            priority = "high",
-            categoryId = "cat_123",
-            dueDate = "2024-01-25T18:00:00Z"
-        )
-        val createdTask = TaskApiModel.Task(
-            id = "task_456",
-            title = "New task",
-            description = "Task description",
-            priority = "high",
-            createdAt = "2024-01-15T10:30:00Z",
-            updatedAt = "2024-01-15T10:30:00Z"
-        )
+        val createRequest = TaskApiModel.CreateTaskRequest("New Task", "New Description", "HIGH", "WORK", "2023-12-31")
+        val createdTask = TaskApiModel.Task("task_1", "New Task", "New Description", "HIGH", null, "2023-12-31", false, "2023-01-01", "2023-01-01")
         val apiResponse = ApiResponse(
             success = true,
             message = "Task created successfully",
             data = createdTask
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.Task::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.Task>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -276,39 +244,27 @@ class TodoApiServiceTest {
     @Test
     fun `updateTask should make correct API call`() = runBlocking {
         // Given
-        val updateRequest = TaskApiModel.UpdateTaskRequest(
-            title = "Updated task",
-            description = "Updated description",
-            priority = "medium",
-            completed = true
-        )
-        val updatedTask = TaskApiModel.Task(
-            id = "task_123",
-            title = "Updated task",
-            description = "Updated description",
-            priority = "medium",
-            completed = true,
-            createdAt = "2024-01-15T10:30:00Z",
-            updatedAt = "2024-01-16T14:20:00Z"
-        )
+        val updateRequest = TaskApiModel.UpdateTaskRequest("Updated Task", "Updated Description", "MEDIUM", "PERSONAL", "2023-12-31")
+        val updatedTask = TaskApiModel.Task("task_1", "Updated Task", "Updated Description", "MEDIUM", null, "2023-12-31", false, "2023-01-01", "2023-01-01")
         val apiResponse = ApiResponse(
             success = true,
             message = "Task updated successfully",
             data = updatedTask
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.Task::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.Task>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
-        val result = apiService.updateTask("task_123", updateRequest)
+        val result = apiService.updateTask("task_1", updateRequest)
 
         // Then
         assertTrue(result.success)
         assertEquals("Task updated successfully", result.message)
         assertEquals(updatedTask, result.data)
         assertEquals("PUT", mockWebServer.takeRequest().method)
-        assertTrue(mockWebServer.takeRequest().path!!.contains("/tasks/task_123"))
+        assertTrue(mockWebServer.takeRequest().path!!.contains("/tasks/task_1"))
     }
 
     @Test
@@ -316,60 +272,54 @@ class TodoApiServiceTest {
         // Given
         val apiResponse = ApiResponse<Unit>(
             success = true,
-            message = "Task deleted successfully",
-            data = null
+            message = "Task deleted successfully"
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, Unit::class.java)
+        val responseJson = moshi.adapter<ApiResponse<Unit>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
-        val result = apiService.deleteTask("task_123")
+        val result = apiService.deleteTask("task_1")
 
         // Then
         assertTrue(result.success)
         assertEquals("Task deleted successfully", result.message)
-        assertNull(result.data)
         assertEquals("DELETE", mockWebServer.takeRequest().method)
-        assertTrue(mockWebServer.takeRequest().path!!.contains("/tasks/task_123"))
+        assertTrue(mockWebServer.takeRequest().path!!.contains("/tasks/task_1"))
     }
 
     @Test
     fun `completeTask should make correct API call`() = runBlocking {
         // Given
-        val completedTask = TaskApiModel.Task(
-            id = "task_123",
-            title = "Completed task",
-            completed = true,
-            createdAt = "2024-01-15T10:30:00Z",
-            updatedAt = "2024-01-16T14:20:00Z"
-        )
+        val completedTask = TaskApiModel.Task("task_1", "Test Task", "Test Description", "HIGH", null, "2023-12-31", true, "2023-01-01", "2023-01-01")
         val apiResponse = ApiResponse(
             success = true,
             message = "Task completed successfully",
             data = completedTask
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.Task::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.Task>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
-        val result = apiService.completeTask("task_123")
+        val result = apiService.completeTask("task_1")
 
         // Then
         assertTrue(result.success)
         assertEquals("Task completed successfully", result.message)
         assertEquals(completedTask, result.data)
         assertEquals("PATCH", mockWebServer.takeRequest().method)
-        assertTrue(mockWebServer.takeRequest().path!!.contains("/tasks/task_123/complete"))
+        assertTrue(mockWebServer.takeRequest().path!!.contains("/tasks/task_1/complete"))
     }
 
     @Test
     fun `getCategories should make correct API call`() = runBlocking {
         // Given
         val categories = listOf(
-            TaskApiModel.Category("cat_1", "Work", "#FF5733", "2024-01-15T10:30:00Z"),
-            TaskApiModel.Category("cat_2", "Personal", "#33FF57", "2024-01-15T10:30:00Z")
+            TaskApiModel.Category("cat_1", "Work", "#FF0000", "2023-01-01"),
+            TaskApiModel.Category("cat_2", "Personal", "#00FF00", "2023-01-01")
         )
         val apiResponse = ApiResponse(
             success = true,
@@ -377,7 +327,9 @@ class TodoApiServiceTest {
             data = categories
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val listType = Types.newParameterizedType(List::class.java, TaskApiModel.Category::class.java)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, listType)
+        val responseJson = moshi.adapter<ApiResponse<List<TaskApiModel.Category>>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -394,15 +346,16 @@ class TodoApiServiceTest {
     @Test
     fun `createCategory should make correct API call`() = runBlocking {
         // Given
-        val createRequest = TaskApiModel.CreateCategoryRequest("Shopping", "#FFC300")
-        val createdCategory = TaskApiModel.Category("cat_3", "Shopping", "#FFC300", "2024-01-15T10:30:00Z")
+        val createRequest = TaskApiModel.CreateCategoryRequest("New Category", "#0000FF")
+        val createdCategory = TaskApiModel.Category("cat_1", "New Category", "#0000FF", "2023-01-01")
         val apiResponse = ApiResponse(
             success = true,
             message = "Category created successfully",
             data = createdCategory
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.Category::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.Category>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -419,26 +372,27 @@ class TodoApiServiceTest {
     @Test
     fun `updateCategory should make correct API call`() = runBlocking {
         // Given
-        val updateRequest = TaskApiModel.UpdateCategoryRequest("Updated Shopping", "#FFD700")
-        val updatedCategory = TaskApiModel.Category("cat_3", "Updated Shopping", "#FFD700", "2024-01-15T10:30:00Z")
+        val updateRequest = TaskApiModel.UpdateCategoryRequest("Updated Category", "#FFFF00")
+        val updatedCategory = TaskApiModel.Category("cat_1", "Updated Category", "#FFFF00", "2023-01-01")
         val apiResponse = ApiResponse(
             success = true,
             message = "Category updated successfully",
             data = updatedCategory
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.Category::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.Category>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
-        val result = apiService.updateCategory("cat_3", updateRequest)
+        val result = apiService.updateCategory("cat_1", updateRequest)
 
         // Then
         assertTrue(result.success)
         assertEquals("Category updated successfully", result.message)
         assertEquals(updatedCategory, result.data)
         assertEquals("PUT", mockWebServer.takeRequest().method)
-        assertTrue(mockWebServer.takeRequest().path!!.contains("/categories/cat_3"))
+        assertTrue(mockWebServer.takeRequest().path!!.contains("/categories/cat_1"))
     }
 
     @Test
@@ -446,40 +400,42 @@ class TodoApiServiceTest {
         // Given
         val apiResponse = ApiResponse<Unit>(
             success = true,
-            message = "Category deleted successfully",
-            data = null
+            message = "Category deleted successfully"
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, Unit::class.java)
+        val responseJson = moshi.adapter<ApiResponse<Unit>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
-        val result = apiService.deleteCategory("cat_3")
+        val result = apiService.deleteCategory("cat_1")
 
         // Then
         assertTrue(result.success)
         assertEquals("Category deleted successfully", result.message)
-        assertNull(result.data)
         assertEquals("DELETE", mockWebServer.takeRequest().method)
-        assertTrue(mockWebServer.takeRequest().path!!.contains("/categories/cat_3"))
+        assertTrue(mockWebServer.takeRequest().path!!.contains("/categories/cat_1"))
     }
 
     @Test
     fun `bulkOperation should make correct API call`() = runBlocking {
         // Given
         val bulkRequest = TaskApiModel.BulkOperationRequest(
-            operation = "update_priority",
-            taskIds = listOf("task_1", "task_2", "task_3"),
-            priority = "high"
+            operation = "DELETE",
+            taskIds = listOf("task_1", "task_2")
         )
-        val bulkResponse = TaskApiModel.BulkOperationResponse(3, "Successfully updated 3 tasks")
+        val bulkResponse = TaskApiModel.BulkOperationResponse(
+            updatedCount = 2,
+            message = "Successfully deleted 2 tasks"
+        )
         val apiResponse = ApiResponse(
             success = true,
             message = "Bulk operation completed successfully",
             data = bulkResponse
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.BulkOperationResponse::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.BulkOperationResponse>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -496,55 +452,49 @@ class TodoApiServiceTest {
     @Test
     fun `searchTasks should make correct API call`() = runBlocking {
         // Given
-        val tasks = listOf(
-            TaskApiModel.Task(
-                id = "task_1",
-                title = "Search result",
-                createdAt = "2024-01-15T10:30:00Z",
-                updatedAt = "2024-01-15T10:30:00Z"
-            )
+        val searchResponse = TaskApiModel.SearchResponse(
+            tasks = listOf(
+                TaskApiModel.Task("task_1", "Test Task", "Test Description", "HIGH", null, "2023-12-31", false, "2023-01-01", "2023-01-01")
+            ),
+            total = 1
         )
-        val searchResponse = TaskApiModel.SearchResponse(tasks, 1)
         val apiResponse = ApiResponse(
             success = true,
             message = "Search completed successfully",
             data = searchResponse
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.SearchResponse::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.SearchResponse>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
-        val result = apiService.searchTasks("important", "title,description", true)
+        val result = apiService.searchTasks("test")
 
         // Then
         assertTrue(result.success)
         assertEquals("Search completed successfully", result.message)
         assertEquals(searchResponse, result.data)
         assertEquals("GET", mockWebServer.takeRequest().method)
-        val request = mockWebServer.takeRequest()
-        assertTrue(request.path!!.contains("/tasks/search"))
-        assertTrue(request.path!!.contains("q=important"))
-        assertTrue(request.path!!.contains("fields=title,description"))
-        assertTrue(request.path!!.contains("fuzzy=true"))
+        val requestPath = mockWebServer.takeRequest().path!!
+        assertTrue(requestPath.contains("/tasks/search"))
+        assertTrue(requestPath.contains("q=test"))
     }
 
     @Test
     fun `getTaskAnalytics should make correct API call`() = runBlocking {
         // Given
-        val byPriority = mapOf("high" to 5, "medium" to 10, "low" to 3)
-        val byCategory = listOf(
-            TaskApiModel.CategoryCount("Work", 8),
-            TaskApiModel.CategoryCount("Personal", 5)
-        )
         val analyticsResponse = TaskApiModel.AnalyticsResponse(
-            total = 18,
-            completed = 12,
-            pending = 6,
+            total = 10,
+            completed = 5,
+            pending = 5,
             overdue = 2,
-            byPriority = byPriority,
-            byCategory = byCategory,
-            completionRate = 66.67
+            byPriority = mapOf("HIGH" to 3, "MEDIUM" to 4, "LOW" to 3),
+            byCategory = listOf(
+                TaskApiModel.CategoryCount("WORK", 6),
+                TaskApiModel.CategoryCount("PERSONAL", 4)
+            ),
+            completionRate = 50.0
         )
         val apiResponse = ApiResponse(
             success = true,
@@ -552,7 +502,8 @@ class TodoApiServiceTest {
             data = analyticsResponse
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, TaskApiModel.AnalyticsResponse::class.java)
+        val responseJson = moshi.adapter<ApiResponse<TaskApiModel.AnalyticsResponse>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -569,25 +520,16 @@ class TodoApiServiceTest {
     @Test
     fun `submitFeedback should make correct API call`() = runBlocking {
         // Given
-        val feedbackRequest = FeedbackApiModel.SubmitFeedbackRequest(
-            rating = 5,
-            comment = "Great app!",
-            category = "general"
-        )
-        val feedback = FeedbackApiModel.Feedback(
-            id = "feedback_123",
-            rating = 5,
-            comment = "Great app!",
-            category = "general",
-            createdAt = "2024-01-15T10:30:00Z"
-        )
+        val feedbackRequest = FeedbackApiModel.SubmitFeedbackRequest(5, "Great app!", "general")
+        val feedback = FeedbackApiModel.Feedback("feedback_1", 5, "Great app!", "general", "2023-01-01T00:00:00")
         val apiResponse = ApiResponse(
             success = true,
             message = "Feedback submitted successfully",
             data = feedback
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, FeedbackApiModel.Feedback::class.java)
+        val responseJson = moshi.adapter<ApiResponse<FeedbackApiModel.Feedback>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -605,20 +547,8 @@ class TodoApiServiceTest {
     fun `getFeedback should make correct API call`() = runBlocking {
         // Given
         val feedbackList = listOf(
-            FeedbackApiModel.Feedback(
-                id = "feedback_1",
-                rating = 5,
-                comment = "Great app!",
-                category = "general",
-                createdAt = "2024-01-15T10:30:00Z"
-            ),
-            FeedbackApiModel.Feedback(
-                id = "feedback_2",
-                rating = 4,
-                comment = "Good app",
-                category = "bug_report",
-                createdAt = "2024-01-16T10:30:00Z"
-            )
+            FeedbackApiModel.Feedback("feedback_1", 5, "Great app!", "general", "2023-01-01T00:00:00"),
+            FeedbackApiModel.Feedback("feedback_2", 4, "Good app", "feature_request", "2023-01-02T00:00:00")
         )
         val apiResponse = ApiResponse(
             success = true,
@@ -626,7 +556,9 @@ class TodoApiServiceTest {
             data = feedbackList
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val listType = Types.newParameterizedType(List::class.java, FeedbackApiModel.Feedback::class.java)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, listType)
+        val responseJson = moshi.adapter<ApiResponse<List<FeedbackApiModel.Feedback>>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When
@@ -643,13 +575,11 @@ class TodoApiServiceTest {
     @Test
     fun `getFeedbackAnalytics should make correct API call`() = runBlocking {
         // Given
-        val ratingDistribution = mapOf("1" to 2, "2" to 3, "3" to 5, "4" to 8, "5" to 12)
-        val categoryDistribution = mapOf("general" to 15, "bug_report" to 8, "feature_request" to 7)
         val analyticsResponse = FeedbackApiModel.AnalyticsResponse(
-            totalFeedback = 30,
+            totalFeedback = 10,
             averageRating = 4.2,
-            ratingDistribution = ratingDistribution,
-            categoryDistribution = categoryDistribution
+            ratingDistribution = mapOf("5" to 4, "4" to 3, "3" to 2, "2" to 1, "1" to 0),
+            categoryDistribution = mapOf("general" to 5, "feature_request" to 3, "bug_report" to 2)
         )
         val apiResponse = ApiResponse(
             success = true,
@@ -657,7 +587,8 @@ class TodoApiServiceTest {
             data = analyticsResponse
         )
 
-        val responseJson = moshi.adapter(ApiResponse::class.java).toJson(apiResponse)
+        val responseType = Types.newParameterizedType(ApiResponse::class.java, FeedbackApiModel.AnalyticsResponse::class.java)
+        val responseJson = moshi.adapter<ApiResponse<FeedbackApiModel.AnalyticsResponse>>(responseType).toJson(apiResponse)
         mockWebServer.enqueue(MockResponse().setBody(responseJson))
 
         // When

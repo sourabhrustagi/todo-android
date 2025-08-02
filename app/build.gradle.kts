@@ -100,6 +100,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
     implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
     ksp(libs.moshi.ksp)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
@@ -121,6 +122,7 @@ dependencies {
     testImplementation(libs.androidx.test.ext.junit)
     testImplementation(libs.androidx.test.runner)
     testImplementation(libs.androidx.test.rules)
+    testImplementation(libs.okhttp.mockwebserver)
 
     // Compose Testing
     androidTestImplementation(libs.androidx.compose.ui.test)

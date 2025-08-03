@@ -21,12 +21,25 @@ fun AddTaskDialog(
     onDismiss: () -> Unit,
     onTaskAdded: (title: String, description: String?, priority: TaskPriority) -> Unit,
     isLoading: Boolean = false,
-    error: String? = null
+    error: String? = null,
+    onReset: () -> Unit = {}
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedPriority by remember { mutableStateOf(TaskPriority.MEDIUM) }
     var isTitleError by remember { mutableStateOf(false) }
+    
+    // Reset form when task creation is successful (isLoading changes from true to false and no error)
+    LaunchedEffect(isLoading, error) {
+        if (!isLoading && title.isNotBlank() && error == null) {
+            // Task creation completed successfully, reset form
+            title = ""
+            description = ""
+            selectedPriority = TaskPriority.MEDIUM
+            isTitleError = false
+            onReset()
+        }
+    }
 
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismiss() },

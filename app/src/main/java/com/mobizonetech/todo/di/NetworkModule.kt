@@ -1,5 +1,6 @@
 package com.mobizonetech.todo.di
 
+import com.mobizonetech.todo.core.constants.AppConstants
 import com.mobizonetech.todo.data.api.interceptors.ApiLoggingInterceptor
 import com.mobizonetech.todo.data.api.interceptors.MockInterceptor
 import dagger.Module
@@ -10,6 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -25,6 +27,10 @@ object NetworkModule {
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BASIC // Reduced logging since we have custom interceptor
             })
+            .connectTimeout(AppConstants.CONNECT_TIMEOUT, TimeUnit.SECONDS)
+            .readTimeout(AppConstants.READ_TIMEOUT, TimeUnit.SECONDS)
+            .writeTimeout(AppConstants.WRITE_TIMEOUT, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
             .build()
     }
 
@@ -32,7 +38,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://api.todoapp.com/v1/")
+            .baseUrl(AppConstants.BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create())
             .build()

@@ -143,11 +143,12 @@ fun TasksScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { 
-                    showAddTaskDialog = true
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
+            if (!uiState.isLoading && !uiState.isCreatingTask) {
+                FloatingActionButton(
+                    onClick = { 
+                        showAddTaskDialog = true
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.surface,
                 shape = CircleShape,
                 modifier = Modifier.shadow(
@@ -160,6 +161,7 @@ fun TasksScreen(
                     contentDescription = "Add Task",
                     modifier = Modifier.size(24.dp)
                 )
+            }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -335,10 +337,13 @@ fun TasksScreen(
                     },
                     onTaskAdded = { title, description, priority ->
                         viewModel.createTask(title, description, priority)
-                        // Don't close dialog immediately, let success/error handle it
+                        // Dialog will be closed only after successful task creation
                     },
                     isLoading = uiState.isCreatingTask,
-                    error = uiState.error
+                    error = uiState.error,
+                    onReset = {
+                        // Form is reset automatically when task is created successfully
+                    }
                 )
             }
 
@@ -403,11 +408,19 @@ fun TasksScreen(
         viewModel.loadTasks()
     }
     
-    // Refresh tasks when returning from other screens (e.g., after deletion from detail screen)
+    // Handle snackbar messages and dialog state
     LaunchedEffect(uiState.snackbarMessage) {
-        if (uiState.snackbarMessage?.contains("deleted successfully") == true) {
-            // Refresh tasks to ensure the list is up to date
-            viewModel.loadTasks()
+        uiState.snackbarMessage?.let { message ->
+            // Close dialog when task is successfully created (with a small delay)
+            if (message.contains("created successfully") && showAddTaskDialog) {
+                kotlinx.coroutines.delay(1500) // Show success message for 1.5 seconds
+                showAddTaskDialog = false
+            }
+            
+            // Refresh tasks when returning from other screens (e.g., after deletion from detail screen)
+            if (message.contains("deleted successfully")) {
+                viewModel.loadTasks()
+            }
         }
     }
 }

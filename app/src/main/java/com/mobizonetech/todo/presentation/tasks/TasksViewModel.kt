@@ -2,6 +2,9 @@ package com.mobizonetech.todo.presentation.tasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mobizonetech.todo.core.constants.AppConstants
+import com.mobizonetech.todo.core.error.*
+import com.mobizonetech.todo.core.validation.ValidationUtils
 import com.mobizonetech.todo.domain.models.Task
 import com.mobizonetech.todo.domain.models.TaskPriority
 import com.mobizonetech.todo.domain.usecases.task.CompleteTaskUseCase
@@ -54,30 +57,45 @@ class TasksViewModel @Inject constructor(
     }
 
     fun createTask(title: String, description: String?, priority: TaskPriority = TaskPriority.MEDIUM) {
+        // Validate input first
+        val titleValidation = ValidationUtils.validateTaskTitle(title)
+        val descriptionValidation = ValidationUtils.validateTaskDescription(description)
+        
+        if (!titleValidation.isSuccess()) {
+            _uiState.value = _uiState.value.copy(
+                error = titleValidation.getErrorMessage()
+            )
+            return
+        }
+        
+        if (!descriptionValidation.isSuccess()) {
+            _uiState.value = _uiState.value.copy(
+                error = descriptionValidation.getErrorMessage()
+            )
+            return
+        }
+        
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isCreatingTask = true)
+            _uiState.value = _uiState.value.copy(isCreatingTask = true, error = null)
             
             createTaskUseCase(title, description, priority).fold(
-                onSuccess = { task ->
+                onSuccess = { _ ->
                     // Reload tasks to show the new task
                     loadTasks()
                     _uiState.value = _uiState.value.copy(
                         isCreatingTask = false,
-                        snackbarMessage = "Task created successfully",
-                        error = null // Clear any previous errors
+                        snackbarMessage = AppConstants.SuccessMessages.TASK_CREATED,
+                        error = null
                     )
                 },
                 onFailure = { exception ->
-                    val errorMessage = when {
-                        exception.message?.contains("network", ignoreCase = true) == true -> 
-                            "Network error. Please check your connection and try again."
-                        exception.message?.contains("timeout", ignoreCase = true) == true -> 
-                            "Request timed out. Please try again."
-                        exception.message?.contains("server", ignoreCase = true) == true -> 
-                            "Server error. Please try again later."
-                        exception.message?.contains("unauthorized", ignoreCase = true) == true -> 
-                            "Authentication error. Please log in again."
-                        else -> exception.message ?: "Failed to create task. Please try again."
+                    val errorMessage = when (exception) {
+                        is NetworkException -> AppConstants.ErrorMessages.NETWORK_ERROR
+                        is TimeoutException -> AppConstants.ErrorMessages.TIMEOUT_ERROR
+                        is ServerException -> AppConstants.ErrorMessages.SERVER_ERROR
+                        is UnauthorizedException -> AppConstants.ErrorMessages.UNAUTHORIZED_ERROR
+                        is ValidationException -> exception.message ?: AppConstants.ErrorMessages.VALIDATION_ERROR
+                        else -> "Failed to create task. Please try again"
                     }
                     
                     _uiState.value = _uiState.value.copy(

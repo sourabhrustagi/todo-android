@@ -27,7 +27,7 @@ This document outlines the best practices that have been implemented in the Andr
 ### Comprehensive Validation
 - **Task Title**: Length validation (1-100 characters)
 - **Task Description**: Length validation (max 500 characters)
-- **Phone Number**: Regex validation for international format
+- **Phone Number**: Regex validation for digits only (7-15 digits)
 - **OTP**: 6-digit validation
 - **Due Date**: Future date validation
 - **Rating**: Range validation (1-5)

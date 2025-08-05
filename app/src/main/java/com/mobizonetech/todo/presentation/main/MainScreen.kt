@@ -37,29 +37,21 @@ fun MainScreen(
                     onNavigateToProfile = {
                         navController.navigate(NavRoutes.Profile.route)
                     },
-                    onNavigateToAddTask = {
-                        navController.navigate(NavRoutes.AddTask.route)
-                    },
                     onNavigateToTaskDetail = { taskId ->
                         parentNavController?.navigate(NavRoutes.TaskDetail.createRoute(taskId)) {
                             launchSingleTop = true
                         }
-                    },
-                    onLogout = onLogout
+                    }
                 )
             }
             
             composable(NavRoutes.Profile.route) {
                 ProfileScreen(
-                    onBackClick = {
-                        navController.popBackStack()
-                    },
                     onNavigateToSettings = {
                         parentNavController?.navigate(NavRoutes.Settings.route) {
                             launchSingleTop = true
                         }
-                    },
-                    onLogout = onLogout
+                    }
                 )
             }
             

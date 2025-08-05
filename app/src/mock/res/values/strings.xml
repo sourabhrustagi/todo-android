@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Todo Mock</string>
+    <string name="app_description">Todo App (Mock Environment)</string>
+    <string name="environment_info">Mock Environment - Using simulated API responses</string>
+</resources> 

@@ -27,6 +27,43 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isDebuggable = true
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
+    }
+    
+    flavorDimensions += "environment"
+    
+    productFlavors {
+        create("mock") {
+            dimension = "environment"
+            applicationIdSuffix = ".mock"
+            versionNameSuffix = "-mock"
+            buildConfigField("String", "ENVIRONMENT", "\"MOCK\"")
+            buildConfigField("boolean", "USE_MOCK_API", "true")
+            buildConfigField("boolean", "ENABLE_API_LOGGING", "true")
+            buildConfigField("String", "BASE_URL", "\"https://api.todoapp.com/v1/\"")
+        }
+        
+        create("development") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("String", "ENVIRONMENT", "\"DEVELOPMENT\"")
+            buildConfigField("boolean", "USE_MOCK_API", "false")
+            buildConfigField("boolean", "ENABLE_API_LOGGING", "true")
+            buildConfigField("String", "BASE_URL", "\"https://dev-api.todoapp.com/v1/\"")
+        }
+        
+        create("production") {
+            dimension = "environment"
+            buildConfigField("String", "ENVIRONMENT", "\"PRODUCTION\"")
+            buildConfigField("boolean", "USE_MOCK_API", "false")
+            buildConfigField("boolean", "ENABLE_API_LOGGING", "false")
+            buildConfigField("String", "BASE_URL", "\"https://api.todoapp.com/v1/\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -37,6 +74,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()

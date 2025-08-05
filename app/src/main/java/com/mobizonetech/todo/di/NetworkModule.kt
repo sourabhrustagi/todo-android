@@ -1,8 +1,10 @@
 package com.mobizonetech.todo.di
 
-import com.mobizonetech.todo.core.constants.AppConstants
+import com.mobizonetech.todo.core.config.ApiConfig
+import com.mobizonetech.todo.core.config.MockApiManager
 import com.mobizonetech.todo.data.api.interceptors.ApiLoggingInterceptor
 import com.mobizonetech.todo.data.api.interceptors.MockInterceptor
+import com.mobizonetech.todo.data.api.interceptors.RetryInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,25 +22,39 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder()
-            .addInterceptor(MockInterceptor()) // Mock API responses for development
-            .addInterceptor(ApiLoggingInterceptor()) // Custom API logging
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BASIC // Reduced logging since we have custom interceptor
-            })
-            .connectTimeout(AppConstants.CONNECT_TIMEOUT, TimeUnit.SECONDS)
-            .readTimeout(AppConstants.READ_TIMEOUT, TimeUnit.SECONDS)
-            .writeTimeout(AppConstants.WRITE_TIMEOUT, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-            .build()
+    fun provideOkHttpClient(
+        mockApiManager: MockApiManager,
+        retryInterceptor: RetryInterceptor
+    ): OkHttpClient {
+        return OkHttpClient.Builder().apply {
+            // Add retry interceptor first (before other interceptors)
+            addInterceptor(retryInterceptor)
+            
+            // Conditionally add MockInterceptor based on configuration
+            if (mockApiManager.isMockApiEnabled) {
+                addInterceptor(MockInterceptor()) // Mock API responses for development
+            }
+            
+            // Conditionally add API logging based on configuration
+            if (ApiConfig.enableApiLogging) {
+                addInterceptor(ApiLoggingInterceptor()) // Custom API logging
+                addInterceptor(HttpLoggingInterceptor().apply {
+                    level = HttpLoggingInterceptor.Level.BASIC // Reduced logging since we have custom interceptor
+                })
+            }
+        }
+        .connectTimeout(ApiConfig.connectTimeout, TimeUnit.SECONDS)
+        .readTimeout(ApiConfig.readTimeout, TimeUnit.SECONDS)
+        .writeTimeout(ApiConfig.writeTimeout, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
+        .build()
     }
 
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(AppConstants.BASE_URL)
+            .baseUrl(ApiConfig.baseUrl)
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create())
             .build()

@@ -21,7 +21,8 @@ import javax.inject.Singleton
 @Singleton
 class TaskRepositoryImpl @Inject constructor(
     private val apiService: TodoApiService,
-    private val taskDao: TaskDao
+    private val taskDao: TaskDao,
+    private val retryManager: RetryManager
 ) : TaskRepository {
 
     override fun getTasks(
@@ -51,11 +52,14 @@ class TaskRepositoryImpl @Inject constructor(
         ApiLogger.logApiCall(apiName, requestData)
         
         try {
-            // Simulate API delay
-            delay(2000)
-            
-            // Mock response - get tasks from local database
-            val tasks = taskDao.getAllTasks().first().map { it.toDomain() }
+            // Use retry manager for API call
+            val tasks = retryManager.retry(operationName = apiName) {
+                // Simulate API delay
+                delay(2000)
+                
+                // Mock response - get tasks from local database
+                taskDao.getAllTasks().first().map { it.toDomain() }
+            }
             
             ApiLogger.logApiSuccess(apiName, "Retrieved ${tasks.size} tasks")
             emit(Result.success(tasks))
@@ -72,18 +76,17 @@ class TaskRepositoryImpl @Inject constructor(
         ApiLogger.logApiCall(apiName, requestData)
         
         try {
-            // Simulate API delay
-            delay(2000)
-            
-            val task = taskDao.getTaskById(taskId)?.toDomain()
-            if (task != null) {
-                ApiLogger.logApiSuccess(apiName, "Task retrieved: ${task.title}")
-                emit(Result.success(task))
-            } else {
-                val error = Exception("Task not found")
-                ApiLogger.logApiError(apiName, error)
-                emit(Result.failure(error))
+            // Use retry manager for API call
+            val task = retryManager.retry(operationName = apiName) {
+                // Simulate API delay
+                delay(2000)
+                
+                taskDao.getTaskById(taskId)?.toDomain()
+                    ?: throw Exception("Task not found")
             }
+            
+            ApiLogger.logApiSuccess(apiName, "Task retrieved: ${task.title}")
+            emit(Result.success(task))
         } catch (e: Exception) {
             ApiLogger.logApiError(apiName, e)
             emit(Result.failure(e))

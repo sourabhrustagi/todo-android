@@ -82,32 +82,31 @@ class TasksViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isCreatingTask = true, error = null)
             
-            createTaskUseCase(title, description, priority).fold(
-                onSuccess = { _ ->
-                    // Reload tasks to show the new task
-                    loadTasks()
-                    _uiState.value = _uiState.value.copy(
-                        isCreatingTask = false,
-                        snackbarMessage = AppConstants.SuccessMessages.TASK_CREATED,
-                        error = null
-                    )
-                },
-                onFailure = { exception ->
-                    val errorMessage = when (exception) {
-                        is NetworkException -> AppConstants.ErrorMessages.NETWORK_ERROR
-                        is TimeoutException -> AppConstants.ErrorMessages.TIMEOUT_ERROR
-                        is ServerException -> AppConstants.ErrorMessages.SERVER_ERROR
-                        is UnauthorizedException -> AppConstants.ErrorMessages.UNAUTHORIZED_ERROR
-                        is ValidationException -> exception.message ?: AppConstants.ErrorMessages.VALIDATION_ERROR
-                        else -> "Failed to create task. Please try again"
-                    }
-                    
-                    _uiState.value = _uiState.value.copy(
-                        isCreatingTask = false,
-                        error = errorMessage
-                    )
+            createTaskUseCase(title, description, priority).onSuccess { _ ->
+                // Reload tasks to show the new task
+                loadTasks()
+                _uiState.value = _uiState.value.copy(
+                    isCreatingTask = false,
+                    snackbarMessage = AppConstants.SuccessMessages.TASK_CREATED,
+                    error = null
+                )
+            }.onError { exception ->
+                val errorMessage = when (exception) {
+                    is NetworkException -> AppConstants.ErrorMessages.NETWORK_ERROR
+                    is TimeoutException -> AppConstants.ErrorMessages.TIMEOUT_ERROR
+                    is ServerException -> AppConstants.ErrorMessages.SERVER_ERROR
+                    is UnauthorizedException -> AppConstants.ErrorMessages.UNAUTHORIZED_ERROR
+                    is ValidationException -> exception.message ?: AppConstants.ErrorMessages.VALIDATION_ERROR
+                    else -> "Failed to create task. Please try again"
                 }
-            )
+                
+                _uiState.value = _uiState.value.copy(
+                    isCreatingTask = false,
+                    error = errorMessage
+                )
+            }.onLoading {
+                // Handle loading state if needed
+            }
         }
     }
 
@@ -243,17 +242,4 @@ class TasksViewModel @Inject constructor(
         
         return filteredTasks
     }
-}
-
-data class TasksUiState(
-    val tasks: List<Task> = emptyList(),
-    val allTasks: List<Task> = emptyList(),
-    val searchQuery: String = "",
-    val selectedPriority: TaskPriority? = null,
-    val isLoading: Boolean = false,
-    val isCreatingTask: Boolean = false,
-    val updatingTaskId: String? = null,
-    val isDeletingTask: Boolean = false,
-    val error: String? = null,
-    val snackbarMessage: String? = null
-) 
+} 

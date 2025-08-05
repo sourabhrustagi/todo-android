@@ -66,7 +66,7 @@ class LoginUseCaseTest {
     @Test
     fun `login with invalid phone number format should return failure`() = runTest {
         // Given
-        val phoneNumber = "1234567890" // Missing + prefix
+        val phoneNumber = "123456" // Too short
 
         // When
         val result = loginUseCase(phoneNumber)
@@ -77,9 +77,9 @@ class LoginUseCaseTest {
     }
 
     @Test
-    fun `login with phone number starting with 0 should return failure`() = runTest {
+    fun `login with phone number containing letters should return failure`() = runTest {
         // Given
-        val phoneNumber = "+01234567890" // Starts with 0 after +
+        val phoneNumber = "1234567890a" // Contains letters
 
         // When
         val result = loginUseCase(phoneNumber)
@@ -93,10 +93,10 @@ class LoginUseCaseTest {
     fun `login with valid phone numbers should pass validation`() = runTest {
         // Given
         val validPhoneNumbers = listOf(
-            "+1234567890",
-            "+44123456789",
-            "+61412345678",
-            "+919876543210"
+            "1234567890",
+            "44123456789",
+            "61412345678",
+            "919876543210"
         )
 
         validPhoneNumbers.forEach { phoneNumber ->
@@ -116,11 +116,11 @@ class LoginUseCaseTest {
     fun `login with invalid phone numbers should fail validation`() = runTest {
         // Given
         val invalidPhoneNumbers = listOf(
-            "1234567890",      // Missing +
-            "+01234567890",    // Starts with 0
-            "+123",            // Too short
+            "123456",          // Too short
+            "12345678901234567890", // Too long
             "abc123",          // Contains letters
-            "+12345678901234567890" // Too long
+            "123456789a",      // Contains letters
+            "1234567890+"      // Contains special characters
         )
 
         invalidPhoneNumbers.forEach { phoneNumber ->

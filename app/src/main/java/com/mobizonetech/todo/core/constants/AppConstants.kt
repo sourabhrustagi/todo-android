@@ -8,6 +8,9 @@ object AppConstants {
     const val READ_TIMEOUT = 30L
     const val WRITE_TIMEOUT = 30L
     
+    // Mock API Configuration
+    const val USE_MOCK_API = true // Set to false to use real API
+    
     // Validation Constants
     const val MIN_TITLE_LENGTH = 1
     const val MAX_TITLE_LENGTH = 100
@@ -71,7 +74,7 @@ object AppConstants {
     
     // Regex Patterns
     object RegexPatterns {
-        const val PHONE_NUMBER = "^\\+[1-9]\\d{1,14}$"
+        const val PHONE_NUMBER = "^\\d{7,15}$"
         const val OTP = "^\\d{6}$"
         const val COLOR_HEX = "^#[0-9A-Fa-f]{6}$"
         const val EMAIL = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"

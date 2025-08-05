@@ -19,7 +19,7 @@ class LoginUseCase @Inject constructor(
     }
     
     private fun isValidPhoneNumber(phoneNumber: String): Boolean {
-        // Basic phone number validation - can be enhanced based on requirements
-        return phoneNumber.matches(Regex("^\\+[1-9]\\d{1,14}$"))
+        // Basic phone number validation - allows digits only, 7-15 digits
+        return phoneNumber.matches(Regex("^\\d{7,15}$"))
     }
 } 

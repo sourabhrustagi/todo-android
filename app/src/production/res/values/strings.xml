@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Todo</string>
+    <string name="app_description">Todo App</string>
+    <string name="environment_info">Production Environment</string>
+</resources> 

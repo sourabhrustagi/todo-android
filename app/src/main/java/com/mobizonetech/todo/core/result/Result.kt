@@ -1,5 +1,9 @@
 package com.mobizonetech.todo.core.result
 
+/**
+ * A sealed class that represents the result of an operation.
+ * This is a more comprehensive version of the existing Result class.
+ */
 sealed class Result<out T> {
     data class Success<T>(val data: T) : Result<T>()
     data class Error(val exception: Throwable) : Result<Nothing>()
@@ -14,33 +18,47 @@ sealed class Result<out T> {
         else -> null
     }
 
-    fun exceptionOrNull(): Throwable? = when (this) {
-        is Error -> exception
-        else -> null
+    fun getOrThrow(): T = when (this) {
+        is Success -> data
+        is Error -> throw exception
+        is Loading -> throw IllegalStateException("Result is still loading")
     }
 
-    fun fold(
-        onSuccess: (T) -> Unit,
-        onError: (Throwable) -> Unit,
-        onLoading: () -> Unit = {}
-    ) {
-        when (this) {
-            is Success -> onSuccess(data)
-            is Error -> onError(exception)
-            is Loading -> onLoading()
+    fun onSuccess(action: (T) -> Unit): Result<T> {
+        if (this is Success) {
+            action(data)
         }
+        return this
     }
 
-    fun <R> map(transform: (T) -> R): Result<R> = when (this) {
-        is Success -> Success(transform(data))
-        is Error -> Error(exception)
-        is Loading -> Loading
+    fun onError(action: (Throwable) -> Unit): Result<T> {
+        if (this is Error) {
+            action(exception)
+        }
+        return this
     }
 
-    fun mapError(transform: (Throwable) -> Throwable): Result<T> = when (this) {
-        is Success -> this
-        is Error -> Error(transform(exception))
-        is Loading -> Loading
+    fun onLoading(action: () -> Unit): Result<T> {
+        if (this is Loading) {
+            action()
+        }
+        return this
+    }
+
+    fun <R> fold(
+        onSuccess: (T) -> R,
+        onError: (Throwable) -> R,
+        onLoading: () -> R
+    ): R = when (this) {
+        is Success -> onSuccess(data)
+        is Error -> onError(exception)
+        is Loading -> onLoading()
+    }
+
+    companion object {
+        fun <T> success(data: T): Result<T> = Success(data)
+        fun <T> error(exception: Throwable): Result<T> = Error(exception)
+        fun <T> loading(): Result<T> = Loading
     }
 }
 

@@ -39,7 +39,7 @@ class ProfileViewModel @Inject constructor(
                             pendingTasks = pendingTasks
                         )
                     },
-                    onFailure = { exception ->
+                    onFailure = { _ ->
                         // Handle error silently for now
                     }
                 )
@@ -57,21 +57,7 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun toggleNotifications() {
-        _uiState.value = _uiState.value.copy(
-            notificationsEnabled = !_uiState.value.notificationsEnabled
-        )
-    }
 
-    fun toggleDarkMode() {
-        viewModelScope.launch {
-            val newDarkMode = !_uiState.value.darkModeEnabled
-            themeManager.setDarkMode(newDarkMode)
-            _uiState.value = _uiState.value.copy(
-                darkModeEnabled = newDarkMode
-            )
-        }
-    }
 }
 
 data class ProfileUiState(

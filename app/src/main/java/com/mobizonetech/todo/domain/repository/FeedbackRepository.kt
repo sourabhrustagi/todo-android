@@ -10,8 +10,4 @@ interface FeedbackRepository {
         comment: String? = null,
         category: FeedbackCategory = FeedbackCategory.GENERAL
     ): Result<Feedback>
-    
-    fun getFeedback(): Flow<Result<List<Feedback>>>
-    
-    suspend fun getFeedbackAnalytics(): Result<Map<String, Any>>
 } 

@@ -75,52 +75,7 @@ class FeedbackRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getFeedback(): Flow<Result<List<Feedback>>> = flow {
-        val apiName = "GET_FEEDBACK"
-        ApiLogger.logApiCall(apiName)
-        try {
-            // Simulate API delay
-            delay(2000)
-            val feedbackList = feedbackDao.getAllFeedback().first().map { it.toDomain() }
-            ApiLogger.logApiSuccess(apiName, "Retrieved "+feedbackList.size+" feedback items")
-            emit(Result.success(feedbackList))
-        } catch (e: Exception) {
-            ApiLogger.logApiError(apiName, e)
-            emit(Result.failure(e))
-        }
-    }
 
-    override suspend fun getFeedbackAnalytics(): Result<Map<String, Any>> {
-        val apiName = "GET_FEEDBACK_ANALYTICS"
-        ApiLogger.logApiCall(apiName)
-
-        return try {
-            // Simulate API delay
-            delay(2000)
-            
-            val allFeedback = feedbackDao.getAllFeedback().first()
-            val totalFeedback = allFeedback.size
-            val averageRating = if (totalFeedback > 0) {
-                allFeedback.map { it.rating }.average()
-            } else 0.0
-            
-            val categoryBreakdown = allFeedback.groupBy { it.category }
-                .mapValues { it.value.size }
-            
-            val analytics = mapOf(
-                "totalFeedback" to totalFeedback,
-                "averageRating" to averageRating,
-                "categoryBreakdown" to categoryBreakdown,
-                "lastUpdated" to LocalDateTime.now().toString()
-            )
-            
-            ApiLogger.logApiSuccess(apiName, "Feedback analytics retrieved: $analytics")
-            Result.success(analytics)
-        } catch (e: Exception) {
-            ApiLogger.logApiError(apiName, e)
-            Result.failure(e)
-        }
-    }
 
     private fun FeedbackEntity.toDomain(): Feedback {
         return Feedback(

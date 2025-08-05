@@ -10,15 +10,7 @@ interface AuthRepository {
     
     suspend fun logout(): Result<Unit>
     
-    fun getCurrentUser(): Flow<User?>
-    
     fun isLoggedIn(): Flow<Boolean>
-    
-    suspend fun saveAuthToken(token: String)
-    
-    suspend fun getAuthToken(): String?
-    
-    suspend fun clearAuthToken()
 }
 
 data class AuthResult(

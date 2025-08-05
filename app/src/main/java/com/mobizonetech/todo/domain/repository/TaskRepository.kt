@@ -40,21 +40,4 @@ interface TaskRepository {
     suspend fun deleteTask(taskId: String): Result<Unit>
 
     suspend fun completeTask(taskId: String): Result<Task>
-
-    suspend fun searchTasks(
-        query: String,
-        fields: String? = null,
-        fuzzy: Boolean? = null
-    ): Result<List<Task>>
-
-    suspend fun getTaskAnalytics(): Result<Map<String, Any>>
-
-    suspend fun bulkOperation(
-        operation: String,
-        taskIds: List<String>,
-        categoryId: String? = null,
-        priority: TaskPriority? = null
-    ): Result<Map<String, Any>>
-
-    suspend fun syncTasksFromServer(): Result<Unit>
 } 

@@ -124,73 +124,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getCurrentUser(): Flow<User?> = flow {
-        val userId = securePreferences.getString(SecurePreferences.KEY_USER_ID)
-        if (userId != null) {
-            val userEntity = userDao.getUserById(userId)
-            if (userEntity != null) {
-                emit(User(
-                    id = userEntity.id,
-                    phoneNumber = userEntity.phoneNumber,
-                    name = userEntity.name
-                ))
-            } else {
-                emit(null)
-            }
-        } else {
-            emit(null)
-        }
-    }
-
     override fun isLoggedIn(): Flow<Boolean> = flow {
         emit(securePreferences.getBoolean(SecurePreferences.KEY_IS_LOGGED_IN))
-    }
-
-    override suspend fun saveAuthToken(token: String) {
-        val apiName = "AUTH_SAVE_TOKEN"
-        val requestData = mapOf("token" to "***") // Mask token for security
-        ApiLogger.logApiCall(apiName, requestData)
-
-        try {
-            // Simulate API delay
-            delay(2000)
-            
-            securePreferences.putString(SecurePreferences.KEY_AUTH_TOKEN, token)
-            ApiLogger.logApiSuccess(apiName, "Auth token saved successfully")
-        } catch (e: Exception) {
-            ApiLogger.logApiError(apiName, e)
-        }
-    }
-
-    override suspend fun getAuthToken(): String? {
-        val apiName = "AUTH_GET_TOKEN"
-        ApiLogger.logApiCall(apiName)
-
-        return try {
-            // Simulate API delay
-            delay(2000)
-            
-            val token = securePreferences.getString(SecurePreferences.KEY_AUTH_TOKEN)
-            ApiLogger.logApiSuccess(apiName, "Auth token retrieved: ${if (token != null) "***" else "null"}")
-            token
-        } catch (e: Exception) {
-            ApiLogger.logApiError(apiName, e)
-            null
-        }
-    }
-
-    override suspend fun clearAuthToken() {
-        val apiName = "AUTH_CLEAR_TOKEN"
-        ApiLogger.logApiCall(apiName)
-
-        try {
-            // Simulate API delay
-            delay(2000)
-            
-            securePreferences.remove(SecurePreferences.KEY_AUTH_TOKEN)
-            ApiLogger.logApiSuccess(apiName, "Auth token cleared successfully")
-        } catch (e: Exception) {
-            ApiLogger.logApiError(apiName, e)
-        }
     }
 } 

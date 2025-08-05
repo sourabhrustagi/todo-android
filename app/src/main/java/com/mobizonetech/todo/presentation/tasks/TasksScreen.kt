@@ -38,13 +38,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TasksScreen(
-    modifier: Modifier = Modifier,
     viewModel: TasksViewModel = hiltViewModel(),
     onNavigateToTaskDetail: (String) -> Unit = {},
-    onNavigateToProfile: () -> Unit = {},
-    onNavigateToAddTask: () -> Unit = {},
-    onNavigateToSettings: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -430,7 +426,6 @@ fun TasksScreen(
 fun TasksScreenPreview() {
     // Simple preview without complex ViewModel mocking
     TasksScreen(
-        modifier = androidx.compose.ui.Modifier,
         viewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     )
 } 

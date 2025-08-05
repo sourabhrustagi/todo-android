@@ -21,7 +21,7 @@ fun TodoNavGraph(
     navController: NavHostController,
     startDestination: String = NavRoutes.Login.route
 ) {
-    val authStateManager: AuthStateManager = hiltViewModel()
+
     
     NavHost(
         navController = navController,

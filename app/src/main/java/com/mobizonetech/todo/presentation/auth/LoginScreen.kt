@@ -240,7 +240,6 @@ fun PreviewLoginScreenPhone() {
 @Preview(showBackground = true, name = "Email/Password Login")
 @Composable
 fun PreviewLoginScreenEmail() {
-    var selectedTab by remember { mutableStateOf(LoginMethod.EMAIL) }
     LoginScreen(
         onLoginSuccess = {}
     )

@@ -2,7 +2,11 @@ package com.mobizonetech.todo.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobizonetech.todo.core.error.*
+import com.mobizonetech.todo.core.error.NetworkException
+import com.mobizonetech.todo.core.error.TimeoutException
+import com.mobizonetech.todo.core.error.ServerException
+import com.mobizonetech.todo.core.error.ValidationException
+import com.mobizonetech.todo.core.error.AuthenticationException
 import com.mobizonetech.todo.core.validation.ValidationUtils
 import com.mobizonetech.todo.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

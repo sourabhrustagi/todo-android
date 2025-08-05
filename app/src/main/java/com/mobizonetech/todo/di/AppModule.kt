@@ -3,7 +3,11 @@ package com.mobizonetech.todo.di
 import android.content.Context
 import androidx.work.WorkManager
 import com.mobizonetech.todo.domain.repository.TaskRepository
-import com.mobizonetech.todo.domain.usecases.task.*
+import com.mobizonetech.todo.domain.usecases.task.GetTasksUseCase
+import com.mobizonetech.todo.domain.usecases.task.CreateTaskUseCase
+
+import com.mobizonetech.todo.domain.usecases.task.DeleteTaskUseCase
+import com.mobizonetech.todo.domain.usecases.task.CompleteTaskUseCase
 import com.mobizonetech.todo.util.SecurePreferences
 import com.mobizonetech.todo.util.ThemeManager
 import dagger.Module
@@ -47,11 +51,7 @@ object AppModule {
         repository: TaskRepository
     ): CreateTaskUseCase = CreateTaskUseCase(repository)
 
-    @Provides
-    @Singleton
-    fun provideUpdateTaskUseCase(
-        repository: TaskRepository
-    ): UpdateTaskUseCase = UpdateTaskUseCase(repository)
+
 
     @Provides
     @Singleton
